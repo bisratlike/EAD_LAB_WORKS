@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ToDo Application</title>
+</head>
+<body>
+    <h1>book Application</h1>
+    <a href="" method="POST" action="registerBook">Add book</a><br>
+    <a href="displayBooks">View books</a><br>
+    <form action="deleteBook" method="POST">
+        <label for="id">Task ID to Delete:</label>
+        <input type="text" id="id" name="id">
+        <button type="submit">Delete book</button>
+    </form>
+    <form action="searchBook" method="GET">
+        <label for="title">Search by title:</label>
+        <input type="text" id="title" name="title">
+        <button type="submit">Search</button>
+    </form>
+</body>
+</html>
