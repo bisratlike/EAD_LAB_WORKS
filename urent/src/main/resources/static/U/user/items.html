@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>U-Rent - Items</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .card-hover {
+        transition: transform 0.2s ease-in-out;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+      <div
+        class="container mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <!-- Brand/Logo -->
+        <a href="index.html" class="text-2xl font-bold text-gray-800">U-Rent</a>
+        <!-- Navigation Links -->
+        <nav class="flex items-center space-x-6">
+          <a href="../index.html" class="text-gray-600 hover:text-blue-600">
+            <i class="fas fa-home mr-1"></i> Home
+          </a>
+          <a href="global-chat.html" class="text-gray-600 hover:text-blue-600">
+            <i class="fas fa-comments mr-1"></i> Global Chat
+          </a>
+
+          <!-- Authenticated Links -->
+          <div id="authLinks" class="flex space-x-4" style="display: none">
+            <a href="post-item.html" class="text-gray-600 hover:text-blue-600">
+              <i class="fas fa-plus-circle mr-1"></i> Post Item
+            </a>
+            <a href="bookmarks.html" class="text-gray-600 hover:text-blue-600">
+              <i class="fas fa-bookmark mr-1"></i> Bookmarks
+            </a>
+            <a href="profile.html" class="text-gray-600 hover:text-blue-600">
+              <i class="fas fa-user mr-1"></i> Profile
+            </a>
+            <button
+              onclick="logout()"
+              class="text-gray-600 hover:text-blue-600"
+            >
+              <i class="fas fa-sign-out-alt mr-1"></i> Logout
+            </button>
+          </div>
+          <!-- Non-Authenticated Links -->
+          <div id="nonAuthLinks">
+            <a href="login.html" class="text-gray-600 hover:text-blue-600">
+              <i class="fas fa-sign-in-alt mr-1"></i> Login
+            </a>
+            <a
+              href="signup.html"
+              class="text-gray-600 hover:text-blue-600 ml-4"
+            >
+              <i class="fas fa-user-plus mr-1"></i> Sign Up
+            </a>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <!-- End Header -->
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12">
+      <h2 class="text-3xl font-bold mb-8 text-gray-800">Featured Items</h2>
+
+      <!-- Search Bar -->
+      <div class="mb-8">
+        <form id="searchForm" class="flex">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search items..."
+            class="flex-grow px-4 py-2 border-2 border-blue-400 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            class="bg-blue-500 text-white px-6 rounded-r hover:bg-blue-600 transition-colors"
+          >
+            Search
+          </button>
+        </form>
+      </div>
+
+      <!-- Items Grid -->
+      <div
+        id="itemsGrid"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+      >
+        <!-- Items will be loaded here -->
+      </div>
+    </main>
+
+    <script>
+      // Global variable to store all fetched items for client-side filtering.
+      let allItems = [];
+
+      // --- Authentication Helpers ---
+      function isLoggedIn() {
+        return !!localStorage.getItem("authToken");
+      }
+
+      function logout() {
+        localStorage.removeItem("authToken");
+        updateAuthUI();
+      }
+
+      function updateAuthUI() {
+        if (isLoggedIn()) {
+          document.getElementById("authLinks").style.display = "flex";
+          document.getElementById("nonAuthLinks").style.display = "none";
+        } else {
+          document.getElementById("authLinks").style.display = "none";
+          document.getElementById("nonAuthLinks").style.display = "block";
+        }
+      }
+
+      // --- API Call Helper ---
+      async function callApi(endpoint, options = {}) {
+        const token = localStorage.getItem("authToken");
+        try {
+          const response = await fetch(`http://localhost:8090/api${endpoint}`, {
+            ...options,
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              ...(options.headers || {}),
+            },
+          });
+          if (response.status === 401) {
+            localStorage.removeItem("authToken");
+            updateAuthUI();
+            return null;
+          }
+          if (!response.ok) {
+            throw new Error("API request failed");
+          }
+          return await response.json();
+        } catch (error) {
+          console.error("API Error:", error);
+          throw error;
+        }
+      }
+
+      // --- Load and Display Items ---
+      async function loadItems() {
+        try {
+          const items = await callApi("/items");
+          if (items) {
+            allItems = items; // Save fetched items for client-side search.
+            displayItems(allItems);
+          }
+        } catch (error) {
+          console.error("Failed to load items:", error);
+        }
+      }
+
+      function displayItems(items) {
+        const grid = document.getElementById("itemsGrid");
+        if (!items || items.length === 0) {
+          grid.innerHTML =
+            '<p class="col-span-full text-center text-gray-500">No items found.</p>';
+          return;
+        }
+        grid.innerHTML = items
+          .map(
+            (item) => `
+          <div class="relative bg-white rounded-lg shadow-sm overflow-hidden card-hover">
+            <img src="${
+              item.photos && item.photos.length > 0
+                ? item.photos[0]
+                : "https://via.placeholder.com/300x200?text=No+Image"
+            }" alt="${item.title}" class="w-full h-48 object-cover" />
+            <!-- Bookmark Icon -->
+            <div class="absolute top-2 right-2">
+              <button onclick="toggleBookmark('${item.id}', this)">
+                <i class="fas fa-bookmark text-2xl ${
+                  item.isBookmarked ? "text-blue-500" : "text-gray-400"
+                }"></i>
+              </button>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold mb-2">${item.title}</h3>
+              <p class="text-gray-600 mb-2">${item.description}</p>
+              <p class="text-gray-800 font-medium mb-2">Price: ETB ${
+                item.price
+              }/day</p>
+              <p class="mb-2">
+                Status: ${
+                  item.availability === "AVAILABLE"
+                    ? '<span class="text-green-600">Available</span>'
+                    : '<span class="text-red-600">Rented Out</span>'
+                }
+              </p>
+              <div class="flex space-x-2">
+                <button onclick="viewItem('${
+                  item.id
+                }')" class="text-blue-500 hover:underline">
+                  View Details <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `
+          )
+          .join("");
+      }
+
+      // --- Search Items (Client-side Filtering) ---
+      function searchItems(query) {
+        if (!query) {
+          displayItems(allItems);
+          return;
+        }
+        const lowerQuery = query.toLowerCase();
+        const filtered = allItems.filter((item) => {
+          return (
+            (item.title && item.title.toLowerCase().includes(lowerQuery)) ||
+            (item.description &&
+              item.description.toLowerCase().includes(lowerQuery))
+          );
+        });
+        displayItems(filtered);
+      }
+
+      // --- Search Form Handler ---
+      document
+        .getElementById("searchForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const query = document.getElementById("searchInput").value;
+          searchItems(query);
+        });
+
+      // --- Navigation and Bookmark ---
+      function viewItem(itemId) {
+        // Redirect to the item details page with the item ID as a query parameter.
+        window.location.href = `item-details.html?id=${itemId}`;
+      }
+
+      async function toggleBookmark(itemId, buttonElement) {
+        if (!isLoggedIn()) {
+          localStorage.setItem("redirectUrl", window.location.href);
+          window.location.href = "login.html";
+          return;
+        }
+        try {
+          // Call the API to add the bookmark (using a POST request)
+          await callApi(`/bookmarks/${itemId}`, { method: "POST" });
+          // Update the bookmark icon color to blue
+          const icon = buttonElement.querySelector("i");
+          icon.classList.remove("text-gray-400");
+          icon.classList.add("text-blue-500");
+        } catch (error) {
+          console.error("Error toggling bookmark:", error);
+        }
+      }
+
+      // --- Initialization ---
+      document.addEventListener("DOMContentLoaded", () => {
+        updateAuthUI();
+        loadItems();
+      });
+    </script>
+  </body>
+</html>

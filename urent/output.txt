@@ -1,0 +1,2031 @@
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com ---
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent ---
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent ---
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/config ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/config/WebSocketConfig.java ---
+// File: src/main/java/com/urent/urent/config/WebSocketConfig.java
+package com.urent.urent.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
+        config.setUserDestinationPrefix("/user");
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws-chat")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/config/AuthConfig.java ---
+package com.urent.urent.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+public class AuthConfig {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/config/AuthenticationConfig.java ---
+package com.urent.urent.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+public class AuthenticationConfig {
+
+    @Bean
+    public AuthenticationProvider authenticationProvider(
+            @Lazy UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+}
+
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/config/MongoConfig.java ---
+package com.urent.urent.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+
+@Configuration
+public class MongoConfig {
+
+    @Bean
+    public MongoDatabaseFactory mongoDatabaseFactory() {
+        return new SimpleMongoClientDatabaseFactory("mongodb+srv://u-rent:u-rent@u-rent.lly95.mongodb.net/urent");
+    }
+
+    @Bean
+    public MongoTemplate mongoTemplate() {
+        return new MongoTemplate(mongoDatabaseFactory());
+    }
+}
+
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/config/WebConfig.java ---
+package com.urent.urent.config;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*")
+                .allowedMethods("*")
+                .allowedHeaders("*");
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/config/SecurityConfig.java ---
+package com.urent.urent.config;
+
+import com.urent.urent.repository.UserRepository;
+import com.urent.urent.security.JwtAuthEntryPoint;
+import com.urent.urent.security.JwtAuthFilter;
+import com.urent.urent.service.LogoutService;
+import com.urent.urent.service.UserService;
+import com.urent.urent.utils.JwtUtils;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtAuthEntryPoint authEntryPoint;
+    private final @Lazy UserService userService;
+    private final PasswordEncoder passwordEncoder;
+
+    public SecurityConfig(JwtAuthEntryPoint authEntryPoint, @Lazy UserService userService, PasswordEncoder passwordEncoder) {
+        this.authEntryPoint = authEntryPoint;
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .exceptionHandling(handling -> handling.authenticationEntryPoint(authEntryPoint))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/items/**").permitAll()
+                .requestMatchers("/api/items/**").authenticated()
+                .requestMatchers("/api/bookmarks/**").authenticated()
+                .requestMatchers("/ws-chat/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        
+        return http.build();
+    }
+
+    @Bean
+    public JwtAuthFilter jwtAuthFilter(JwtUtils jwtUtils, LogoutService logoutService, UserService userService) {
+        return new JwtAuthFilter(jwtUtils, userService, logoutService);
+    }
+}
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/repository ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/repository/CommentRepository.java ---
+package com.urent.urent.repository;
+
+import com.urent.urent.models.Comment;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+
+public interface CommentRepository extends MongoRepository<Comment, String> {
+    List<Comment> findByItemId(String itemId);
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/repository/BookmarkRepository.java ---
+package com.urent.urent.repository;
+
+import com.urent.urent.models.Bookmark;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+
+public interface BookmarkRepository extends MongoRepository<Bookmark, String> {
+    List<Bookmark> findByUserId(String userId);
+    boolean existsByUserIdAndItemId(String userId, String itemId);
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/repository/ChatMessageRepository.java ---
+
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/repository/UserRepository.java ---
+package com.urent.urent.repository;
+
+import com.urent.urent.models.User;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends MongoRepository<User, String> {
+    Optional<User> findByEmail(String email);
+    boolean existsByEmail(String email);
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/repository/ItemRepository.java ---
+package com.urent.urent.repository;
+
+import com.urent.urent.models.Item;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+
+public interface ItemRepository extends MongoRepository<Item, String> {
+    List<Item> findByOwnerId(String ownerId);
+    // In ItemRepository.java
+List<Item> findByTitleContainingIgnoreCase(String searchTerm);
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/repository/RatingRepository.java ---
+package com.urent.urent.repository;
+
+import com.urent.urent.models.Rating;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+
+public interface RatingRepository extends MongoRepository<Rating, String> {
+    List<Rating> findByItemId(String itemId);
+}
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/InvalidTokenException.java ---
+// File: src/main/java/com/urent/urent/exception/InvalidTokenException.java
+package com.urent.urent.exception;
+
+public class InvalidTokenException extends RuntimeException {
+    public InvalidTokenException(String message) {
+        super(message);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/ErrorResponse.java ---
+package com.urent.urent.exception;
+
+import lombok.Getter;
+import lombok.Setter;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@Getter @Setter
+public class ErrorResponse {
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;
+    private Map<String, String> details;  // For validation errors
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/GlobalExceptionHandler.java ---
+package com.urent.urent.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // Handle validation errors (e.g., @Valid failures)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        ErrorResponse response = new ErrorResponse();
+        response.setTimestamp(LocalDateTime.now());
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setError("Validation Error");
+        response.setMessage("Validation failed");
+        response.setDetails(errors);
+        response.setPath(request.getDescription(false).replace("uri=", ""));
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // Handle business logic exceptions
+    @ExceptionHandler({EmailExistsException.class, InvalidCredentialsException.class})
+    public ResponseEntity<ErrorResponse> handleBusinessExceptions(RuntimeException ex, WebRequest request) {
+        ErrorResponse response = new ErrorResponse();
+        response.setTimestamp(LocalDateTime.now());
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setError("Business Rule Violation");
+        response.setMessage(ex.getMessage());
+        response.setPath(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // Handle database constraint violations
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(WebRequest request) {
+        ErrorResponse response = new ErrorResponse();
+        response.setTimestamp(LocalDateTime.now());
+        response.setStatus(HttpStatus.CONFLICT.value());
+        response.setError("Data Conflict");
+        response.setMessage("Database constraint violation");
+        response.setPath(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    // Global fallback for all other exceptions
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex, WebRequest request) {
+        ErrorResponse response = new ErrorResponse();
+        response.setTimestamp(LocalDateTime.now());
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.setError("Internal Server Error");
+        response.setMessage(ex.getMessage()); // Only include message in development
+        response.setPath(request.getDescription(false).replace("uri=", ""));
+        
+        // Log the exception here
+        ex.printStackTrace();
+        
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
+
+    @ExceptionHandler(ItemNotFoundException.class)
+public ResponseEntity<ErrorResponse> handleItemNotFound(ItemNotFoundException ex, WebRequest request) {
+    ErrorResponse response = new ErrorResponse();
+    response.setTimestamp(LocalDateTime.now());
+    response.setStatus(HttpStatus.NOT_FOUND.value());
+    response.setError("Not Found");
+    response.setMessage(ex.getMessage());
+    response.setPath(request.getDescription(false).replace("uri=", ""));
+    return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+}
+
+@ExceptionHandler(RuntimeException.class)
+public ResponseEntity<ErrorResponse> handleUnauthorized(RuntimeException ex, WebRequest request) {
+    ErrorResponse response = new ErrorResponse();
+    response.setTimestamp(LocalDateTime.now());
+    response.setStatus(HttpStatus.FORBIDDEN.value());
+    response.setError("Forbidden");
+    response.setMessage(ex.getMessage());
+    response.setPath(request.getDescription(false).replace("uri=", ""));
+    return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+}
+
+// Add these handlers to GlobalExceptionHandler.java
+@ExceptionHandler(BookmarkExistsException.class)
+public ResponseEntity<ErrorResponse> handleBookmarkExists(BookmarkExistsException ex, WebRequest request) {
+    ErrorResponse response = new ErrorResponse();
+    response.setTimestamp(LocalDateTime.now());
+    response.setStatus(HttpStatus.CONFLICT.value());
+    response.setError("Conflict");
+    response.setMessage(ex.getMessage());
+    response.setPath(request.getDescription(false).replace("uri=", ""));
+    return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+}
+
+@ExceptionHandler(UnauthorizedException.class)
+public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex, WebRequest request) {
+    ErrorResponse response = new ErrorResponse();
+    response.setTimestamp(LocalDateTime.now());
+    response.setStatus(HttpStatus.FORBIDDEN.value());
+    response.setError("Forbidden");
+    response.setMessage(ex.getMessage());
+    response.setPath(request.getDescription(false).replace("uri=", ""));
+    return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+}
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/InvalidCredentialsException.java ---
+// src/main/java/com/urent/urent/exception/InvalidCredentialsException.java
+package com.urent.urent.exception;
+
+public class InvalidCredentialsException extends RuntimeException {
+    public InvalidCredentialsException(String message) {
+        super(message);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/EmailExistsException.java ---
+// src/main/java/com/urent/urent/exception/EmailExistsException.java
+package com.urent.urent.exception;
+public class EmailExistsException extends RuntimeException {
+    public EmailExistsException(String message) {
+        super(message);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/ItemNotFoundException.java ---
+package com.urent.urent.exception;
+
+public class ItemNotFoundException extends RuntimeException {
+    public ItemNotFoundException(String message) {
+        super(message);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/BookmarkExistsException.java ---
+package com.urent.urent.exception;
+
+public class BookmarkExistsException extends RuntimeException {
+    public BookmarkExistsException(String message) {
+        super(message);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/UnauthorizedException.java ---
+package com.urent.urent.exception;
+
+public class UnauthorizedException extends RuntimeException {
+    public UnauthorizedException(String message) {
+        super(message);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/exception/BookmarkNotFoundException.java ---
+package com.urent.urent.exception;
+
+public class BookmarkNotFoundException extends RuntimeException {
+    public BookmarkNotFoundException(String message) {
+        super(message);
+    }
+}
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/security ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/security/JwtAuthEntryPoint.java ---
+package com.urent.urent.security;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+import java.io.IOException;
+
+@Component
+public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
+    @Override
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
+                         AuthenticationException authException) throws IOException {
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/security/JwtAuthFilter.java ---
+package com.urent.urent.security;
+
+import com.urent.urent.service.LogoutService;
+import com.urent.urent.service.UserService;
+import com.urent.urent.utils.JwtUtils;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.web.filter.OncePerRequestFilter;
+import java.io.IOException;
+
+public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private final JwtUtils jwtUtils;
+    private final UserService userService;
+    private final LogoutService logoutService;
+
+    public JwtAuthFilter(JwtUtils jwtUtils, 
+                       UserService userService,
+                       LogoutService logoutService) {
+        this.jwtUtils = jwtUtils;
+        this.userService = userService;
+        this.logoutService = logoutService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                   HttpServletResponse response,
+                                   FilterChain filterChain) throws ServletException, IOException {
+        try {
+            String jwt = parseJwt(request);
+            if (jwt != null) {
+                if (logoutService.isTokenInvalid(jwt)) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                
+                if (jwtUtils.validateToken(jwt)) {
+                    authenticateUser(jwt, request);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Authentication error: " + e.getMessage()); // Fixed logging
+        }
+        filterChain.doFilter(request, response);
+    }
+
+    private void authenticateUser(String jwt, HttpServletRequest request) {
+        String username = jwtUtils.getUsernameFromToken(jwt);
+        UserDetails userDetails = userService.loadUserByUsername(username);
+        
+        UsernamePasswordAuthenticationToken authentication = 
+            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private String parseJwt(HttpServletRequest request) {
+        String headerAuth = request.getHeader("Authorization");
+        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
+        return null;
+    }
+}
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/CommentService.java ---
+package com.urent.urent.service;
+
+import com.urent.urent.dto.CommentDTO;
+import com.urent.urent.exception.ItemNotFoundException;
+import com.urent.urent.models.Comment;
+import com.urent.urent.models.User;
+import com.urent.urent.repository.CommentRepository;
+import com.urent.urent.repository.ItemRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+
+@Service
+public class CommentService {
+    private final CommentRepository commentRepository;
+    private final ItemRepository itemRepository;
+
+    public CommentService(CommentRepository commentRepository, ItemRepository itemRepository) {
+        this.commentRepository = commentRepository;
+        this.itemRepository = itemRepository;
+    }
+
+    public void addComment(String itemId, CommentDTO commentDTO) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        itemRepository.findById(itemId)
+            .orElseThrow(() -> new ItemNotFoundException("Item not found"));
+        
+        Comment comment = new Comment();
+        comment.setUserId(user.getId());
+        comment.setItemId(itemId);
+        comment.setContent(commentDTO.getContent());
+        comment.setTimestamp(LocalDateTime.now());
+        commentRepository.save(comment);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/ItemService.java ---
+package com.urent.urent.service;
+
+import com.urent.urent.dto.ItemDTO;
+import com.urent.urent.dto.ItemRequestDTO;
+import com.urent.urent.exception.ItemNotFoundException;
+import com.urent.urent.models.Item;
+import com.urent.urent.models.User;
+import com.urent.urent.repository.ItemRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Base64;
+import java.io.IOException;
+
+@Service
+public class ItemService {
+    private final ItemRepository itemRepository;
+
+    public ItemService(ItemRepository itemRepository) {
+        this.itemRepository = itemRepository;
+    }
+
+    public ItemDTO createItem(ItemRequestDTO itemRequest, String base64Image) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Item item = new Item();
+        item.setTitle(itemRequest.getTitle());
+        item.setDescription(itemRequest.getDescription());
+        item.setPrice(itemRequest.getPrice());
+        item.setPhotos(Collections.singletonList(base64Image)); // Store the Base64 image
+        item.setAvailability(itemRequest.getAvailability());
+        item.setOwnerId(currentUser.getId());
+        
+        Item savedItem = itemRepository.save(item);
+        return mapToDTO(savedItem);
+    }
+
+    public List<ItemDTO> getAllItems() {
+        return itemRepository.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ItemDTO> getUserItems() {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return itemRepository.findByOwnerId(currentUser.getId()).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ItemDTO getItemById(String id) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException("Item not found with id: " + id));
+        return mapToDTO(item);
+    }
+
+  public ItemDTO updateItem(String id, ItemRequestDTO itemRequest) {
+    User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    Item existingItem = itemRepository.findById(id)
+            .orElseThrow(() -> new ItemNotFoundException("Item not found with id: " + id));
+
+    if (!existingItem.getOwnerId().equals(currentUser.getId())) {
+        throw new RuntimeException("Unauthorized to update this item");
+    }
+
+    existingItem.setTitle(itemRequest.getTitle());
+    existingItem.setDescription(itemRequest.getDescription());
+    existingItem.setPrice(itemRequest.getPrice());
+
+    // Only update the image if provided
+    if (itemRequest.getImage() != null && !itemRequest.getImage().isEmpty()) {
+        String base64Image = convertImageToBase64(itemRequest.getImage());
+        existingItem.setPhotos(Collections.singletonList(base64Image)); // Store the Base64 image
+    }
+
+    existingItem.setAvailability(itemRequest.getAvailability());
+    Item updatedItem = itemRepository.save(existingItem);
+    return mapToDTO(updatedItem);
+}
+
+// Add this method to convert image to Base64
+private String convertImageToBase64(MultipartFile image) {
+    if (image.isEmpty()) {
+        throw new RuntimeException("Failed to upload image: no file provided");
+    }
+    
+    try {
+        byte[] bytes = image.getBytes();
+        return Base64.getEncoder().encodeToString(bytes); // Convert to Base64
+    } catch (IOException e) {
+        throw new RuntimeException("Failed to convert image to Base64: " + e.getMessage());
+    }
+}
+
+    public void deleteItem(String id) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Item existingItem = itemRepository.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException("Item not found with id: " + id));
+        if (!existingItem.getOwnerId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized to delete this item");
+        }
+        itemRepository.delete(existingItem);
+    }
+
+    private ItemDTO mapToDTO(Item item) {
+        return ItemDTO.builder()
+                .id(item.getId())
+                .title(item.getTitle())
+                .description(item.getDescription())
+                .price(item.getPrice())
+                .photos(item.getPhotos())
+                .availability(item.getAvailability())
+                .ownerId(item.getOwnerId())
+                .build();
+    }
+
+public List<ItemDTO> searchItems(String query) {
+    return itemRepository.findByTitleContainingIgnoreCase(query)
+            .stream()
+            .map(this::mapToDTO)
+            .collect(Collectors.toList());
+}
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/PasswordResetService.java ---
+// File: src/main/java/com/urent/urent/service/PasswordResetService.java
+package com.urent.urent.service;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+// Correct import
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+// import com.github.benmanes.caffeine.cache.Cache;
+import com.urent.urent.dto.PasswordResetDTO;
+import com.urent.urent.exception.InvalidTokenException;
+import com.urent.urent.models.User;
+import com.urent.urent.repository.UserRepository;
+
+import lombok.SneakyThrows;
+
+@Service
+public class PasswordResetService {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+   
+    @Autowired
+    public PasswordResetService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+    }
+    private final Cache<String, String> resetTokens = 
+        Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).build();
+
+    @SneakyThrows
+    public void initiateReset(String email) {
+        userRepository.findByEmail(email)
+            .ifPresent(user -> {
+                String token = UUID.randomUUID().toString();
+                resetTokens.put(token, email);
+                emailService.sendPasswordResetEmail(email, token);
+            });
+    }
+
+    public void completeReset(PasswordResetDTO resetDTO) {
+        String email = resetTokens.getIfPresent(resetDTO.getResetToken());
+        if (email == null) throw new InvalidTokenException("Invalid reset token");
+        
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        
+        user.setPassword(passwordEncoder.encode(resetDTO.getNewPassword()));
+        userRepository.save(user);
+        resetTokens.invalidate(resetDTO.getResetToken());
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/UserService.java ---
+package com.urent.urent.service;
+
+import com.urent.urent.dto.LoginRequestDTO;
+import com.urent.urent.dto.SignupDTO;
+import com.urent.urent.dto.UserDTO;
+import com.urent.urent.dto.UserUpdateDTO;
+import com.urent.urent.exception.EmailExistsException;
+import com.urent.urent.exception.InvalidCredentialsException;
+import com.urent.urent.models.User;
+import com.urent.urent.repository.UserRepository;
+import com.urent.urent.utils.JwtUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils, @Lazy AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtils = jwtUtils;
+        this.authenticationManager = authenticationManager;
+    }
+
+    // Other methods remain unchanged
+
+
+    public UserDTO signup(SignupDTO signupDTO) {
+        if (userRepository.existsByEmail(signupDTO.getEmail())) {
+            throw new EmailExistsException("Email already exists");
+        }
+
+        User user = new User();
+        user.setName(signupDTO.getName());
+        user.setEmail(signupDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(signupDTO.getPassword()));
+        user.setProfilePicture(signupDTO.getProfilePicture());
+        user.setBio(signupDTO.getBio());
+        user.setPhoneNumber(signupDTO.getPhoneNumber());
+
+        User savedUser = userRepository.save(user);
+        return mapToDTO(savedUser);
+    }
+
+   public Map<String, Object> login(LoginRequestDTO loginRequest) {
+    Authentication authentication = authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(
+            loginRequest.getEmail(),
+            loginRequest.getPassword()
+        )
+    );
+    
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+    User user = (User) authentication.getPrincipal();
+    String token = jwtUtils.generateToken(user);
+    
+    Map<String, Object> response = new HashMap<>();
+    response.put("token", token);
+    response.put("user", user);
+    
+    return response;
+}
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
+    public String deleteAccount(String id) {
+        userRepository.deleteById(id);
+        return "Account deleted successfully";
+    }
+
+    private UserDTO mapToDTO(User user) {
+        return UserDTO.builder()
+            .id(user.getId())
+            .name(user.getName())
+            .email(user.getEmail())
+            .build();
+    }
+
+    // In UserService.java
+public UserDTO getCurrentUserProfile() {
+    User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    return mapToFullDTO(currentUser);
+}
+
+public UserDTO updateUserProfile(UserUpdateDTO updateDTO) {
+    User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    
+    currentUser.setName(updateDTO.getName());
+    currentUser.setProfilePicture(updateDTO.getProfilePicture());
+    currentUser.setBio(updateDTO.getBio());
+    currentUser.setPhoneNumber(updateDTO.getPhoneNumber());
+    
+    User updatedUser = userRepository.save(currentUser);
+    return mapToFullDTO(updatedUser);
+}
+
+private UserDTO mapToFullDTO(User user) {
+    return UserDTO.builder()
+            .id(user.getId())
+            .name(user.getName())
+            .email(user.getEmail())
+            .profilePicture(user.getProfilePicture())
+            .bio(user.getBio())
+            .phoneNumber(user.getPhoneNumber())
+            .trustScore(user.getTrustScore())
+            .build();
+}
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/EmailService.java ---
+package com.urent.urent.service;
+
+public interface EmailService {
+    void sendPasswordResetEmail(String email, String token);
+    void sendConfirmationEmail(String email); // Add this if needed
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/BookmarkService.java ---
+package com.urent.urent.service;
+
+import com.urent.urent.dto.BookmarkDTO;
+import com.urent.urent.exception.BookmarkExistsException;
+import com.urent.urent.exception.BookmarkNotFoundException;
+import com.urent.urent.exception.ItemNotFoundException;
+import com.urent.urent.exception.UnauthorizedException;
+import com.urent.urent.models.Bookmark;
+import com.urent.urent.models.Item;
+import com.urent.urent.models.User;
+import com.urent.urent.repository.BookmarkRepository;
+import com.urent.urent.repository.ItemRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class BookmarkService {
+
+    private final BookmarkRepository bookmarkRepository;
+    private final ItemRepository itemRepository;
+
+    public BookmarkService(BookmarkRepository bookmarkRepository, ItemRepository itemRepository) {
+        this.bookmarkRepository = bookmarkRepository;
+        this.itemRepository = itemRepository;
+    }
+
+    public BookmarkDTO addBookmark(String itemId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        // Check if item exists
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException("Item not found"));
+        
+        // Check if bookmark exists
+        if (bookmarkRepository.existsByUserIdAndItemId(user.getId(), itemId)) {
+            throw new BookmarkExistsException("Item already bookmarked");
+        }
+        
+        Bookmark bookmark = new Bookmark();
+        bookmark.setUserId(user.getId());
+        bookmark.setItemId(itemId);
+        bookmark.setBookmarkedAt(LocalDateTime.now());
+        
+        Bookmark savedBookmark = bookmarkRepository.save(bookmark);
+        return mapToDTO(savedBookmark);
+    }
+
+    public void removeBookmark(String bookmarkId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Bookmark bookmark = bookmarkRepository.findById(bookmarkId)
+                .orElseThrow(() -> new BookmarkNotFoundException("Bookmark not found"));
+        
+        if (!bookmark.getUserId().equals(user.getId())) {
+            throw new UnauthorizedException("Unauthorized to delete this bookmark");
+        }
+        
+        bookmarkRepository.delete(bookmark);
+    }
+
+    public List<BookmarkDTO> getUserBookmarks() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return bookmarkRepository.findByUserId(user.getId()).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private BookmarkDTO mapToDTO(Bookmark bookmark) {
+        return BookmarkDTO.builder()
+                .id(bookmark.getId())
+                .userId(bookmark.getUserId())
+                .itemId(bookmark.getItemId())
+                .bookmarkedAt(bookmark.getBookmarkedAt())
+                .build();
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/DummyEmailService.java ---
+package com.urent.urent.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class DummyEmailService implements EmailService {
+    @Override
+    public void sendPasswordResetEmail(String email, String token) {
+        System.out.println("[Mock] Password reset email sent to " + email + " with token: " + token);
+    }
+
+    @Override
+    public void sendConfirmationEmail(String email) {
+        System.out.println("[Mock] Confirmation email sent to " + email);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/LogoutService.java ---
+package com.urent.urent.service;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
+
+@Service
+public class LogoutService {
+    private final Cache<String, Boolean> tokenBlocklist = 
+        Caffeine.newBuilder()
+                .expireAfterWrite(24, TimeUnit.HOURS)
+                .build();
+
+    public void logout(String token) {
+        tokenBlocklist.put(token, true);
+    }
+
+    public boolean isTokenInvalid(String token) {
+        return tokenBlocklist.getIfPresent(token) != null;
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/service/RatingService.java ---
+// File: src/main/java/com/urent/urent/service/RatingService.java
+package com.urent.urent.service;
+
+import com.urent.urent.dto.RatingDTO;
+import com.urent.urent.exception.ItemNotFoundException;
+import com.urent.urent.models.Rating;
+import com.urent.urent.models.User;
+import com.urent.urent.repository.RatingRepository;
+import com.urent.urent.repository.ItemRepository;
+
+import java.util.List;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+@Service
+public class RatingService {
+    private final RatingRepository ratingRepository;
+    private final ItemRepository itemRepository;
+
+    public RatingService(RatingRepository ratingRepository, ItemRepository itemRepository) {
+        this.ratingRepository = ratingRepository;
+        this.itemRepository = itemRepository;
+    }
+
+    public void addRating(String itemId, RatingDTO ratingDTO) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        itemRepository.findById(itemId)
+            .orElseThrow(() -> new ItemNotFoundException("Item not found"));
+        
+        Rating rating = new Rating();
+        rating.setUserId(user.getId());
+        rating.setItemId(itemId);
+        rating.setRating(ratingDTO.getRating());
+        ratingRepository.save(rating);
+    }
+
+    // Add in RatingService.java
+public Double getAverageRating(String itemId) {
+    List<Rating> ratings = ratingRepository.findByItemId(itemId);
+    return ratings.stream()
+            .mapToInt(Rating::getRating)
+            .average()
+            .orElse(0.0);
+}
+}
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/utils ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/utils/JwtUtils.java ---
+package com.urent.urent.utils;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.util.Base64;
+import java.util.Date;
+
+@Component
+public class JwtUtils {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private long expiration; // Expiration in seconds
+
+    private Key getSigningKey() {
+        try {
+            byte[] keyBytes = Base64.getDecoder().decode(secret);
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Invalid JWT secret key", e);
+        }
+    }
+
+    public String generateToken(UserDetails userDetails) {
+        return Jwts.builder()
+            .setSubject(userDetails.getUsername())
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000))
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+            .compact();
+    }
+    public boolean validateToken(String token) {
+        try {
+            Jws<Claims> claimsJws = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey()) // Verify key
+                .build()
+                .parseClaimsJws(token);
+            return !claimsJws.getBody().getExpiration().before(new Date()); // Ensure token is valid
+        } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("Error validating token: " + e.getMessage());
+            return false; // Invalid token
+        }
+    }
+
+    public String getUsernameFromToken(String token) {
+        return Jwts.parserBuilder()
+            .setSigningKey(getSigningKey()) // Secure key
+            .build()
+            .parseClaimsJws(token)
+            .getBody()
+            .getSubject(); // Extract username
+    }
+}
+
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/UrentApplication.java ---
+package com.urent.urent;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
+public class UrentApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(UrentApplication.class, args);
+    }
+}
+
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/RatingDTO.java ---
+package com.urent.urent.dto;
+
+import lombok.*;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class RatingDTO {
+    private Integer rating;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/UserDTO.java ---
+package com.urent.urent.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;   
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class UserDTO {
+    private String id;
+    private String name;
+    private String email;
+    private String profilePicture;
+    private String bio;
+    private Long phoneNumber;
+    private Double trustScore;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/UserUpdateDTO.java ---
+package com.urent.urent.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class UserUpdateDTO {
+    private String name;
+    private String profilePicture;
+    private String bio;
+    private Long phoneNumber;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/LoginRequestDTO.java ---
+// LoginRequestDTO.java
+package com.urent.urent.dto;
+
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor // Add this
+@AllArgsConstructor
+public class LoginRequestDTO {
+    private String email;
+    private String password;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/SignupDTO.java ---
+package com.urent.urent.dto;
+
+import jakarta.validation.constraints.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.io.Serializable;
+
+@Getter
+@Setter
+public class SignupDTO implements Serializable { // Implement Serializable
+    private static final long serialVersionUID = 1L; // Add a serialVersionUID
+
+    @NotBlank
+    private String name;
+
+    @Email
+    @NotBlank
+    private String email;
+
+    @NotBlank
+    @Size(min = 6)
+    private String password;
+
+    private String profilePicture;
+
+    private String bio;
+
+    private Double trustScore = 5.0; // Default trust score
+
+    @Min(100000000)
+    private Long phoneNumber; // Changed to Long to handle larger phone numbers
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/ItemRequestDTO.java ---
+package com.urent.urent.dto;
+
+import com.urent.urent.models.enums.Availability;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
+
+@Getter
+@Setter
+
+public class ItemRequestDTO {
+    @NotBlank
+    private String title;
+    private String description;
+    @NotNull
+    private Double price;
+    private MultipartFile image; // Keep this for the image upload
+    private Availability availability;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/ItemDTO.java ---
+package com.urent.urent.dto;
+
+import com.urent.urent.models.enums.Availability;
+import lombok.*;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ItemDTO {
+    private String id;
+    private String title;
+    private String description;
+    private Double price;
+    private List<String> photos;
+    private Availability availability;
+    private String ownerId;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/CommentDTO.java ---
+package com.urent.urent.dto;
+
+import lombok.*;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CommentDTO {
+    private String content;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/PasswordResetDTO.java ---
+package com.urent.urent.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+@Getter
+@Setter
+public class PasswordResetDTO {
+    @NotBlank
+    private String email;
+    
+    @NotBlank
+    private String newPassword;
+    
+    @NotBlank
+    private String resetToken;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/dto/BookmarkDTO.java ---
+package com.urent.urent.dto;
+
+import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class BookmarkDTO {
+    private String id;
+    private String userId;
+    private String itemId;
+    private LocalDateTime bookmarkedAt;
+}
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/controller ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/controller/ItemController.java ---
+package com.urent.urent.controller;
+import com.urent.urent.service.RatingService;
+import com.urent.urent.dto.ItemDTO;
+import com.urent.urent.dto.ItemRequestDTO;
+import com.urent.urent.service.ItemService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Base64;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/items")
+public class ItemController {
+    private final ItemService itemService;
+
+    public ItemController(ItemService itemService) {
+        this.itemService = itemService;
+    }
+
+    @PostMapping
+    public ResponseEntity<ItemDTO> createItem(@Valid @ModelAttribute ItemRequestDTO itemRequest) {
+        // Convert image to Base64
+        String base64Image = convertImageToBase64(itemRequest.getImage()); // Convert here
+    
+        // Create the item with the Base64 image
+        ItemDTO itemDTO = itemService.createItem(itemRequest, base64Image); // Pass Base64 image
+    
+        return new ResponseEntity<>(itemDTO, HttpStatus.CREATED);
+    }
+private String convertImageToBase64(MultipartFile image) {
+    if (image.isEmpty()) {
+        throw new RuntimeException("Failed to upload image: no file provided");
+    }
+
+    try {
+        byte[] bytes = image.getBytes();
+        return Base64.getEncoder().encodeToString(bytes); // Convert to Base64
+    } catch (IOException e) {
+        throw new RuntimeException("Failed to convert image to Base64: " + e.getMessage());
+    }
+}
+
+    @GetMapping
+    public ResponseEntity<List<ItemDTO>> getAllItems() {
+        return ResponseEntity.ok(itemService.getAllItems());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ItemDTO> getItem(@PathVariable String id) {
+        return ResponseEntity.ok(itemService.getItemById(id));
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<ItemDTO> updateItem(@PathVariable String id, @Valid @ModelAttribute ItemRequestDTO itemRequest) {
+        return ResponseEntity.ok(itemService.updateItem(id, itemRequest));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteItem(@PathVariable String id) {
+        itemService.deleteItem(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    // In ItemController.java
+@GetMapping("/search")
+public ResponseEntity<List<ItemDTO>> searchByTitle(@RequestParam String query) {
+    return ResponseEntity.ok(itemService.searchItems(query));
+}
+
+
+// In ItemController.java@Autowired
+private RatingService ratingService;
+
+@GetMapping("/{id}/average-rating")
+public ResponseEntity<Double> getAverageRating(@PathVariable String id) {
+    return ResponseEntity.ok(ratingService.getAverageRating(id));
+}
+
+    @GetMapping("/my-items")
+    public ResponseEntity<List<ItemDTO>> getUserItems() {
+        List<ItemDTO> items = itemService.getUserItems();
+        return ResponseEntity.ok(items);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/controller/CommentController.java ---
+package com.urent.urent.controller;
+
+import com.urent.urent.dto.CommentDTO;
+import com.urent.urent.service.CommentService;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/comments")
+public class CommentController {
+    private final CommentService commentService;
+
+    public CommentController(CommentService commentService) {
+        this.commentService = commentService;
+    }
+
+    @PostMapping("/{itemId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void addComment(
+            @PathVariable String itemId,
+            @RequestBody CommentDTO commentDTO
+    ) {
+        commentService.addComment(itemId, commentDTO);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/controller/ChatController.java ---
+// File: src/main/java/com/urent/urent/controller/ChatController.java
+package com.urent.urent.controller;
+
+import com.urent.urent.models.ChatMessage;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+
+@Controller
+public class ChatController {
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public ChatController(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    @MessageMapping("/chat.send")
+    public void sendMessage(@Payload ChatMessage chatMessage) {
+        // Broadcast to public chat
+        messagingTemplate.convertAndSend("/topic/public", chatMessage);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/controller/AuthController.java ---
+package com.urent.urent.controller;
+
+import com.urent.urent.dto.*;
+import com.urent.urent.service.*;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+    private final UserService userService;
+    private final LogoutService logoutService;
+    private final PasswordResetService passwordResetService;
+
+    // 1. Fixed constructor injection
+    @Autowired
+    public AuthController(
+        UserService userService,
+        LogoutService logoutService,
+        PasswordResetService passwordResetService
+    ) {
+        this.userService = userService;
+        this.logoutService = logoutService;
+        this.passwordResetService = passwordResetService;
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<UserDTO> signup(@Valid @RequestBody SignupDTO signupDTO) {
+        return ResponseEntity.ok(userService.signup(signupDTO));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+        return ResponseEntity.ok(userService.login(loginRequest));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAccount(@PathVariable String id) {
+        return ResponseEntity.ok(Map.of(
+            "message", userService.deleteAccount(id)
+        ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        String token = authHeader.substring(7);
+        logoutService.logout(token);
+        return ResponseEntity.ok(Map.of("message", "Logout successful"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        passwordResetService.initiateReset(email);
+        return ResponseEntity.ok(Map.of("message", "Reset email sent"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody PasswordResetDTO resetDTO) {
+        passwordResetService.completeReset(resetDTO);
+        return ResponseEntity.ok(Map.of("message", "Password updated"));
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/controller/RatingController.java ---
+// File: src/main/java/com/urent/urent/controller/RatingController.java
+package com.urent.urent.controller;
+
+import com.urent.urent.dto.RatingDTO;
+import com.urent.urent.service.RatingService;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/ratings")
+public class RatingController {
+    private final RatingService ratingService;
+
+    public RatingController(RatingService ratingService) {
+        this.ratingService = ratingService;
+    }
+
+    @PostMapping("/{itemId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void addRating(
+            @PathVariable String itemId,
+            @RequestBody RatingDTO ratingDTO
+    ) {
+        ratingService.addRating(itemId, ratingDTO);
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/controller/BookmarkController.java ---
+package com.urent.urent.controller;
+
+import com.urent.urent.dto.BookmarkDTO;
+import com.urent.urent.service.BookmarkService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/bookmarks")
+public class BookmarkController {
+
+    private final BookmarkService bookmarkService;
+
+    public BookmarkController(BookmarkService bookmarkService) {
+        this.bookmarkService = bookmarkService;
+    }
+
+    @PostMapping("/{itemId}")
+    public ResponseEntity<BookmarkDTO> addBookmark(@PathVariable String itemId) {
+        return new ResponseEntity<>(bookmarkService.addBookmark(itemId), HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BookmarkDTO>> getBookmarks() {
+        return ResponseEntity.ok(bookmarkService.getUserBookmarks());
+    }
+
+    @DeleteMapping("/{bookmarkId}")
+    public ResponseEntity<Void> removeBookmark(@PathVariable String bookmarkId) {
+        bookmarkService.removeBookmark(bookmarkId);
+        return ResponseEntity.noContent().build();
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/controller/UserController.java ---
+package com.urent.urent.controller;
+
+import com.urent.urent.dto.UserDTO;
+import com.urent.urent.dto.UserUpdateDTO;
+import com.urent.urent.service.UserService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getMyProfile() {
+        return ResponseEntity.ok(userService.getCurrentUserProfile());
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDTO> updateProfile(
+        @Valid @RequestBody UserUpdateDTO updateDTO
+    ) {
+        return ResponseEntity.ok(userService.updateUserProfile(updateDTO));
+    }
+}
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/Rating.java ---
+package com.urent.urent.models;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Document(collection = "ratings")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Rating {
+    @Id
+    private String id;
+
+    @Field("user_id")
+    private String userId;
+
+    @Field("item_id")
+    private String itemId;
+
+    private Integer rating; // 1 to 5
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/ChatMessage.java ---
+// File: src/main/java/com/urent/urent/models/ChatMessage.java
+package com.urent.urent.models;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ChatMessage {
+    private String id;
+    private String content;
+    private String senderId;
+    private LocalDateTime timestamp;
+    private MessageType type;
+
+    public enum MessageType {
+        CHAT, JOIN, LEAVE
+    }
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/Message.java ---
+package com.urent.urent.models;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Document(collection = "messages")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Message {
+    @Id
+    private String id; // Changed to String for MongoDB
+
+    private String senderId; // Reference to User
+    private String chatId; // Reference to Chat
+    private String content;
+    private LocalDateTime timestamp;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/User.java ---
+package com.urent.urent.models;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
+
+@Document
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class User implements UserDetails {
+    @Id
+    private String id;
+
+    private String name;
+    private String email; 
+    private String password;
+    private String profilePicture;
+    private String bio;
+
+    @Builder.Default
+    private Double trustScore = 5.0;
+
+    private Long phoneNumber;
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
+    // ✅ Override getUsername() to return email
+    @Override
+    public String getUsername() {
+        return email;  
+    }
+
+    // ✅ Override required methods from UserDetails
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.emptyList(); // No roles for now
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+}
+
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/Item.java ---
+package com.urent.urent.models;
+import com.urent.urent.models.enums.Availability;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Transient;
+
+import lombok.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Document(collection = "items")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Item {
+    @Id
+    private String id; // Changed to String for MongoDB
+
+    private String title;
+    private String description;
+    private Double price;
+    private List<String> photos;
+
+    @Builder.Default
+    private Availability availability = Availability.AVAILABLE;
+
+    private String ownerId; // Reference to User (owner)
+
+    private List<Rating> ratings; // Embedded documents
+    private List<Comment> comments; // Embedded documents
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
+
+    // Add in Item.java
+@Transient // Not stored in MongoDB
+private Double averageRating;
+
+public Double getAverageRating() {
+    return ratings.stream()
+            .mapToInt(Rating::getRating)
+            .average()
+            .orElse(0.0);
+}
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/Chat.java ---
+package com.urent.urent.models;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
+import java.util.List;
+
+@Document(collection = "chats")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Chat {
+    @Id
+    private String id; // Changed to String for MongoDB
+
+    private List<String> participantIds; // Reference to User IDs
+    private List<Message> messages; // Embedded documents
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/Comment.java ---
+package com.urent.urent.models;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Document(collection = "comments")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Comment {
+    @Id
+    private String id; // Changed to String for MongoDB
+
+    private String userId; // Reference to User
+    private String itemId; // Reference to Item
+    private String content;
+    private LocalDateTime timestamp;
+}
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/Admin.java ---
+package com.urent.urent.models;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Document(collection = "admins")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Admin {
+    @Id
+    private String id; // MongoDB uses String for IDs
+
+    @Indexed(unique = true)
+    private String email; // Unique constraint for MongoDB
+
+    private String password;
+    private String name;
+
+    @Builder.Default
+    private Boolean isActive = true;
+
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now(); // Default creation time
+}
+
+
+--- Entering directory: /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/enums ---
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/enums/Availability.java ---
+package com.urent.urent.models.enums;
+
+public enum Availability {
+    AVAILABLE,
+    RENTED_OUT
+}
+
+
+--- Content of /home/user/Desktop/fourth year/enterprise_application/final project Repo/U-rent/urent/./src/main/java/com/urent/urent/models/Bookmark.java ---
+package com.urent.urent.models;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.annotation.CreatedDate;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Document(collection = "bookmarks")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Bookmark {
+    @Id
+    private String id; // Changed to String for MongoDB
+
+    private String userId; // Reference to User
+    private String itemId; // Reference to Item
+
+    @CreatedDate
+    private LocalDateTime bookmarkedAt;
+}

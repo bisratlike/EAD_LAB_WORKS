@@ -1,0 +1,1959 @@
+
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - U-Rent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .auth-bg {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+      }
+    </style>
+  </head>
+  <body class="h-screen flex items-center justify-center auth-bg">
+    <div class="bg-white p-8 rounded-xl shadow-xl w-96">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+        <p class="text-gray-600">Access your U-Rent account</p>
+      </div>
+
+      <div
+        id="errorMessage"
+        class="hidden mb-4 p-4 bg-red-100 text-red-700 rounded-lg"
+      ></div>
+
+      <form id="loginForm" class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Email</label
+          >
+          <input
+            type="email"
+            id="email"
+            required
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Password</label
+          >
+          <input
+            type="password"
+            id="password"
+            required
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+        >
+          <i class="fas fa-sign-in-alt mr-2"></i> Sign In
+        </button>
+      </form>
+
+      <div class="mt-6 text-center space-y-3">
+        <a
+          href="./forgot-password.html"
+          class="text-sm text-blue-600 hover:underline"
+          >Forgot Password?</a
+        >
+        <p class="text-gray-600 text-sm">
+          New to U-Rent?
+          <a href="./user/signup.html" class="text-blue-600 hover:underline"
+            >Create Account</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <!-- Only need login.js -->
+    <script src="./js/login.js"></script>
+  </body>
+</html>
+
+
+<!-- header.html -->
+<header class="bg-white shadow-sm">
+    <nav class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center">
+            <img src="logo.svg" alt="U-Rent" class="h-8 mr-2">
+            <span class="text-xl font-bold text-gray-900">U-Rent</span>
+        </a>
+        
+        <div class="flex items-center space-x-6">
+            <a href="post-item.html" class="flex items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-plus-circle mr-2"></i> Post Item
+            </a>
+            <a href="bookmarks.html" class="flex items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-bookmark mr-2"></i> Bookmarks
+            </a>
+            <a href="profile.html" class="flex items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-user-circle mr-2"></i> Profile
+            </a>
+            <button onclick="logout()" class="ml-4 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200">
+                Logout
+            </button>
+        </div>
+    </nav>
+</header>
+
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Rent - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-hover {
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="index.html" class="text-2xl font-bold text-gray-800">U-Rent</a>
+                <nav class="flex items-center space-x-6">
+                    <!-- Show these links only when logged in -->
+                    <div id="authLinks" style="display: none;">
+                        <a href="user/post-item.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-plus-circle mr-1"></i> Post Item
+                        </a>
+                        <a href="user/my-items.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-plus-circle mr-1"></i>My Items</a>
+                        <a href="user/items.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-box mr-1"></i> Items
+                        </a>
+                        <a href="user/bookmarks.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-bookmark mr-1"></i> Bookmarks
+                        </a>
+                        <a href="user/global-chat.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-comments mr-1"></i> Chat
+                        </a>
+                        <a href="user/profile.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-user mr-1"></i> Profile
+                        </a>
+                        <button onclick="logout()" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        </button>
+                    </div>
+                    <!-- Show these links when not logged in -->
+                    <div id="nonAuthLinks">
+                        <a href="login.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Login
+                        </a>
+                        <a href="user/signup.html" class="text-gray-600 hover:text-blue-600 ml-4">
+                            <i class="fas fa-user-plus mr-1"></i> Sign Up
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-b from-blue-800 to-blue-600 text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl font-bold mb-4">Find the Perfect Rental</h1>
+            <p class="text-xl mb-8">Discover unique items available for rent in your area</p>
+            
+            <!-- Search and Filters -->
+            <div class="max-w-4xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <div class="flex-1">
+                        <input type="text" id="searchInput" placeholder="Search items..." 
+                            class="w-full px-6 py-4 rounded-lg border-2 border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800">
+                    </div>
+                    <select class="px-6 py-4 rounded-lg border-2 border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800">
+                        <option>All Categories</option>
+                        <option>Electronics</option>
+                        <option>Tools</option>
+                        <option>Sports</option>
+                        <option>Furniture</option>
+                        <option>Vehicles</option>
+                    </select>
+                </div>
+                
+                <!-- Post Item CTA -->
+                <div class="flex justify-center">
+                    <a href="user/post-item.html" class="inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg" data-requires-auth>
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Post Your Item for Rent
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12">
+        <h2 class="text-3xl font-bold mb-8 text-gray-800">Featured Items</h2>
+        
+        <!-- Items Grid -->
+        <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <!-- Items will be loaded here -->
+        </div>
+    </main>
+
+    <script src="./js/index.js"></script>
+  </body>
+</html>
+
+<!-- item-list.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Item List</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <!-- Header -->
+    <header
+      class="bg-cover bg-center p-4 flex justify-between"
+      style="background-image: url('../assets/images/Im2.PNG')"
+    >
+      <h1 class="text-xl font-bold text-white">U-Rent</h1>
+      <nav class="space-x-4">
+        <a href="../index.html" class="hover:underline text-white">Home</a>
+        <a href="profile.html" class="hover:underline text-white">Profile</a>
+        <a href="item-list.html" class="hover:underline text-white">Items</a>
+        <a href="global-chat.html" class="hover:underline text-white">Chat</a>
+        <a href="bookmarks.html" class="hover:underline text-white"
+          >Bookmarks</a
+        >
+        <a href="../login.html" class="hover:underline text-white">Login</a>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto py-8">
+      <h2 class="text-3xl font-bold mb-4">Item List</h2>
+      <div id="itemListContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Items will be dynamically inserted here by JavaScript -->
+      </div>
+    </main>
+
+    <!-- Link to External JavaScript File -->
+    <script src="../js/item-list.js"></script>
+  </body>
+</html>
+
+
+<!-- global-chat.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Chat</title>
+    <style>
+        .chat-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f5f5f5;
+        }
+        .own-message {
+            background: #e3f2fd;
+            margin-left: 20%;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .message-input {
+            display: flex;
+            gap: 10px;
+        }
+        #messageInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Global Chat</h1>
+        <div class="messages" id="messages"></div>
+        <div class="message-input">
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script>
+        const token = localStorage.getItem('authToken');
+        if (!token) window.location.href = '../login.html';
+
+        let stompClient = null;
+        let currentUser = null;
+
+        // Connect to WebSocket
+        function connect() {
+            const socket = new SockJS('/ws-chat');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect(
+                { Authorization: `Bearer ${token}` }, 
+                () => {
+                    // Get current user details
+                    fetch('/api/users/me', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }).then(response => response.json())
+                      .then(user => {
+                          currentUser = user;
+                          joinChat();
+                          subscribeToMessages();
+                      });
+                },
+                (error) => {
+                    console.error('WebSocket connection error:', error);
+                    setTimeout(connect, 5000); // Reconnect after 5 seconds
+                }
+            );
+        }
+
+        function joinChat() {
+            const joinMessage = {
+                senderId: currentUser.id,
+                content: `${currentUser.name} joined the chat`,
+                type: 'JOIN'
+            };
+            stompClient.send("/app/chat.send", {}, JSON.stringify(joinMessage));
+        }
+
+        function subscribeToMessages() {
+            stompClient.subscribe('/topic/public', (message) => {
+                const msg = JSON.parse(message.body);
+                displayMessage(msg);
+            });
+        }
+
+        function displayMessage(message) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${message.senderId === currentUser.id ? 'own-message' : ''}`;
+            
+            const header = document.createElement('div');
+            header.className = 'message-header';
+            header.innerHTML = `
+                <span>${message.senderId === currentUser.id ? 'You' : message.senderName || 'User'}</span>
+                <span>${new Date(message.timestamp).toLocaleTimeString()}</span>
+            `;
+            
+            const content = document.createElement('div');
+            content.textContent = message.content;
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(content);
+            messagesDiv.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (content) {
+                const message = {
+                    senderId: currentUser.id,
+                    content: content,
+                    type: 'CHAT',
+                    timestamp: new Date().toISOString()
+                };
+                
+                stompClient.send("/app/chat.send", {}, JSON.stringify(message));
+                input.value = '';
+            }
+        }
+
+        // Handle Enter key
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initial connection
+        connect();
+
+        // Handle window close
+        window.addEventListener('beforeunload', () => {
+            if (stompClient) {
+                const leaveMessage = {
+                    senderId: currentUser.id,
+                    content: `${currentUser.name} left the chat`,
+                    type: 'LEAVE'
+                };
+                stompClient.send("/app/chat.send", {}, JSON.stringify(leaveMessage));
+                stompClient.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>
+
+<!-- signup.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - U-Rent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .bg-gradient {
+            background: linear-gradient(to right, #3B82F6, #2563EB);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-8">
+                    <a href="../index.html" class="text-2xl font-bold text-blue-600">U-Rent</a>
+                    <nav class="hidden md:flex space-x-6">
+                        <a href="../index.html" class="text-gray-600 hover:text-blue-600">Home</a>
+                        <a href="global-chat.html" class="text-gray-600 hover:text-blue-600">Chat</a>
+                        <a href="bookmarks.html" class="text-gray-600 hover:text-blue-600">Bookmarks</a>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="../login.html" class="text-gray-600 hover:text-blue-600">Login</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-8 space-y-6">
+                <div>
+                    <h2 class="text-center text-3xl font-extrabold text-gray-900">
+                        Create your account
+                    </h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Join U-Rent and start renting items today
+                    </p>
+                </div>
+
+                <!-- Error message container -->
+                <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="ml-3">
+                            <span class="block sm:inline"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success message container -->
+                <div id="success-message" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md" role="alert">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="ml-3">
+                            <span class="block sm:inline"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="signup-form" class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            required
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your full name"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            required
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your email"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input
+                            id="phoneNumber"
+                            name="phoneNumber"
+                            type="tel"
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your phone number (optional)"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            required
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Create a password"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                        <input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            required
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Confirm your password"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
+                        <textarea
+                            id="bio"
+                            name="bio"
+                            rows="3"
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Tell us about yourself (optional)"
+                        ></textarea>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Sign Up
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600">
+                            Already have an account?
+                            <a href="../login.html" class="font-medium text-blue-600 hover:text-blue-500">
+                                Login here
+                            </a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+</body>
+</html>
+
+
+<!-- post-item.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Rent - Post Item</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .image-preview {
+            transition: transform 0.3s ease;
+        }
+        .image-preview:hover {
+            transform: scale(1.05);
+        }
+        .custom-file-input::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+        .custom-file-input::before {
+            content: 'Select Images';
+            display: inline-block;
+            background: linear-gradient(to right, #3B82F6, #2563EB);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            outline: none;
+            white-space: nowrap;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        .custom-file-input:hover::before {
+            background: linear-gradient(to right, #2563EB, #1D4ED8);
+        }
+        .custom-file-input:active::before {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="../index.html" class="text-2xl font-bold text-gray-800">U-Rent</a>
+                <nav class="flex items-center space-x-6">
+                    <!-- Show these links only when logged in -->
+                    <div id="authLinks" style="display: none;">
+                        <a href="post-item.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-plus-circle mr-1"></i> Post Item
+                        </a>
+                        <a href="items.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-box mr-1"></i> Items
+                        </a>
+                        <a href="bookmarks.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-bookmark mr-1"></i> Bookmarks
+                        </a>
+                        <a href="global-chat.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-comments mr-1"></i> Chat
+                        </a>
+                        <a href="profile.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-user mr-1"></i> Profile
+                        </a>
+                        <button onclick="logout()" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        </button>
+                    </div>
+                    <!-- Show these links when not logged in -->
+                    <div id="nonAuthLinks">
+                        <a href="../login.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Login
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-3xl mx-auto">
+            <!-- Page Title -->
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">Post New Item</h1>
+
+            <!-- Status Messages -->
+            <div id="statusMessages" class="mb-6">
+                <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                    <span class="block sm:inline"></span>
+                </div>
+                <div id="success-message" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                    <span class="block sm:inline"></span>
+                </div>
+            </div>
+
+            <!-- Post Item Form -->
+            <form id="postItemForm" class="bg-white rounded-lg shadow-lg p-6 space-y-6">
+                <!-- Title -->
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="title" name="title" required
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="What are you renting out?">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="description" name="description" rows="4" required
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Describe your item in detail..."></textarea>
+                </div>
+
+                <!-- Price -->
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700">Price per Day (ETB)</label>
+                    <div class="mt-1 relative rounded-lg">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">ETB</span>
+                        </div>
+                        <input type="number" id="price" name="price" required min="0" step="0.01"
+                            class="block w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                    <select id="category" name="category" required
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="">Select a category</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="furniture">Furniture</option>
+                        <option value="tools">Tools</option>
+                        <option value="vehicles">Vehicles</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="books">Books</option>
+                        <option value="sports">Sports Equipment</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Images -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Images</label>
+                    <input type="file" id="image" name="image" accept="image/*" multiple
+                        class="custom-file-input block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="mt-1 text-sm text-gray-500">Upload up to 5 images of your item</p>
+                    
+                    <!-- Image Preview -->
+                    <div id="photoPreviewsContainer" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <!-- Preview images will be added here -->
+                    </div>
+                    
+                    <div id="loadingSpinner" class="hidden">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div>
+                    <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                    <input type="text" id="location" name="location" required
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Where is the item located?">
+                </div>
+
+                <!-- Availability -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Availability</label>
+                    <div class="mt-2 flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="availability" value="AVAILABLE" checked
+                                class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-gray-700">Available Now</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="availability" value="RENTED_OUT"
+                                class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-gray-700">Rented Out</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-4">
+                    <button type="submit"
+                        class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Post Item</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/post-item.js"></script>
+    <script>
+        // Check authentication and redirect if not logged in
+        const token = localStorage.getItem('authToken');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        
+        if (!token || !user?.id) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            window.location.href = '../login.html';
+        }
+    </script>
+</body>
+</html>
+
+<!-- my-items.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Items - U-Rent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="../index.html" class="text-2xl font-bold text-blue-600"
+              >U-Rent</a
+            >
+          </div>
+          <div class="flex items-center space-x-4">
+            <a href="../index.html" class="text-gray-600 hover:text-blue-600"
+              >Home</a
+            >
+            <a href="my-items.html" class="text-blue-600 font-semibold"
+              >My Items</a
+            >
+            <button onclick="logout()" class="text-gray-600 hover:text-red-600">
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">My Listed Items</h1>
+        <a
+          href="./post-item.html"
+          class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <i class="fas fa-plus mr-2"></i>Post New Item
+        </a>
+      </div>
+
+      <!-- Items Grid -->
+      <div
+        id="items-container"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <!-- Items will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center"
+    >
+      <div class="bg-white rounded-lg p-8 w-full max-w-md">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-900">Edit Item</h2>
+          <button
+            onclick="closeModal()"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="editForm" class="space-y-4">
+          <input type="hidden" id="editItemId" />
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Title</label
+            >
+            <input
+              type="text"
+              id="editTitle"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Description</label
+            >
+            <textarea
+              id="editDescription"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-32"
+            ></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Price (per day)</label
+            >
+            <input
+              type="number"
+              id="editPrice"
+              required
+              min="0"
+              step="0.01"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        window.location.href = "../login.html";
+      }
+
+      function logout() {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userData");
+        window.location.href = "../login.html";
+      }
+
+      // Load items when page loads
+      document.addEventListener("DOMContentLoaded", loadUserItems);
+
+      async function loadUserItems() {
+        const container = document.getElementById("items-container");
+        container.innerHTML =
+          '<div class="col-span-full text-center py-8"><i class="fas fa-spinner fa-spin text-blue-600 text-3xl"></i></div>';
+
+        try {
+          const response = await fetch(
+            "http://localhost:8090/api/items/my-items",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (response.status === 401) {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("userData");
+            window.location.href = "../login.html";
+            return;
+          }
+
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(errorData || "Failed to load items");
+          }
+
+          const items = await response.json();
+          console.log("Fetched items:", items); // Debug log
+
+          if (items.length === 0) {
+            container.innerHTML = `
+              <div class="col-span-full text-center py-12">
+                <i class="fas fa-box-open text-gray-400 text-5xl mb-4"></i>
+                <p class="text-gray-600 text-lg">You haven't listed any items yet.</p>
+                <a href="../post-item.html" class="inline-block mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                  <i class="fas fa-plus mr-2"></i>Post Your First Item
+                </a>
+              </div>
+            `;
+            return;
+          }
+
+          renderItems(items);
+        } catch (error) {
+          console.error("Error:", error);
+          container.innerHTML = `
+            <div class="col-span-full text-center py-8">
+              <div class="bg-red-100 text-red-700 p-4 rounded-lg inline-block">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                Failed to load items: ${error.message}
+                <button onclick="loadUserItems()" class="ml-4 text-blue-600 hover:text-blue-800">
+                  <i class="fas fa-redo mr-1"></i>Retry
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // Helper function to get image URL from photos array
+      function getImageUrl(photos) {
+        return photos && photos.length > 0
+          ? `data:image/jpeg;base64,${photos[0]}`
+          : null;
+      }
+
+      function renderItems(items) {
+        const container = document.getElementById("items-container");
+        container.innerHTML = "";
+
+        items.forEach((item) => {
+          console.log("Rendering item:", item); // Debug log
+          const itemCard = document.createElement("div");
+          itemCard.className =
+            "bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]";
+          
+          const imageUrl = getImageUrl(item.photos);
+          console.log("Image URL:", imageUrl); // Debug log
+
+          itemCard.innerHTML = `
+            <div class="relative pb-[60%]">
+              ${
+                imageUrl
+                  ? `<img src="${imageUrl}" class="absolute inset-0 w-full h-full object-cover" alt="${item.title}">`
+                  : `<div class="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                      <i class="fas fa-image text-gray-400 text-4xl"></i>
+                    </div>`
+              }
+            </div>
+            <div class="p-4">
+              <h3 class="text-xl font-semibold text-gray-900 mb-2">${
+                item.title
+              }</h3>
+              <p class="text-gray-600 mb-4 line-clamp-2">${item.description}</p>
+              <div class="flex items-center justify-between">
+                <span class="text-lg font-bold text-blue-600">$${
+                  item.price
+                }/day</span>
+                <div class="flex space-x-2">
+                  <button onclick="openEditModal('${
+                    item.id
+                  }')" class="text-gray-600 hover:text-blue-600 p-2">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="deleteItem('${
+                    item.id
+                  }')" class="text-gray-600 hover:text-red-600 p-2">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+          container.appendChild(itemCard);
+        });
+      }
+
+      async function openEditModal(itemId) {
+        try {
+          const response = await fetch(
+            `http://localhost:8090/api/items/${itemId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch item details");
+          }
+
+          const item = await response.json();
+          document.getElementById("editItemId").value = item.id;
+          document.getElementById("editTitle").value = item.title;
+          document.getElementById("editDescription").value = item.description;
+          document.getElementById("editPrice").value = item.price;
+
+          document.getElementById("editModal").classList.remove("hidden");
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to load item details. Please try again.");
+        }
+      }
+
+      async function handleEditSubmit(e) {
+        e.preventDefault();
+
+        const itemId = document.getElementById("editItemId").value;
+        const updatedItem = {
+          title: document.getElementById("editTitle").value,
+          description: document.getElementById("editDescription").value,
+          price: parseFloat(document.getElementById("editPrice").value),
+        };
+
+        try {
+          const response = await fetch(
+            `http://localhost:8090/api/items/${itemId}`,
+            {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(updatedItem),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(errorData || "Failed to update item");
+          }
+
+          closeModal();
+          loadUserItems(); // Refresh the list
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to update item. Please try again.");
+        }
+      }
+
+      async function deleteItem(itemId) {
+        if (!confirm("Are you sure you want to delete this item?")) {
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `http://localhost:8090/api/items/${itemId}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to delete item");
+          }
+
+          loadUserItems(); // Refresh the list
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to delete item. Please try again.");
+        }
+      }
+
+      function closeModal() {
+        document.getElementById("editModal").classList.add("hidden");
+      }
+
+      // Event listeners
+      document
+        .getElementById("editForm")
+        .addEventListener("submit", handleEditSubmit);
+    </script>
+  </body>
+</html>
+
+
+<!-- items.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Items - U-Rent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex justify-between items-center">
+        <a href="../index.html" class="text-2xl font-bold text-gray-800">U-Rent</a>
+        <nav class="flex items-center space-x-6">
+          <a href="post-item.html" class="text-gray-600 hover:text-blue-600">
+            <i class="fas fa-plus-circle mr-1"></i> Post Item
+          </a>
+          <a href="bookmarks.html" class="text-gray-600 hover:text-blue-600">
+            <i class="fas fa-bookmark mr-1"></i> Bookmarks
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- Search/Sort -->
+    <div class="mb-8 flex flex-col md:flex-row gap-4">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search items..."
+        class="flex-grow px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      >
+      <select
+        id="sortSelect"
+        class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      >
+        <option value="newest">Newest First</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+      </select>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="hidden text-center py-8">
+      <i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="hidden bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
+
+    <!-- Items Grid -->
+    <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+  </main>
+
+  <script src="../js/items.js"></script>
+  <script>
+    // Assuming the following code is in items.js
+    // ...
+    itemCard.innerHTML = `
+      <div class="relative pb-[60%]">
+        ${
+          item.image
+            ? `<img src="data:image/jpeg;base64,${item.image}" class="absolute inset-0 w-full h-full object-cover" alt="${item.title}">`
+            : `<div class="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                <i class="fas fa-image text-gray-400 text-4xl"></i>
+              </div>`
+        }
+      </div>
+    `;
+    // ...
+  </script>
+</body>
+</html>
+
+<!-- profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - U-Rent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex justify-between items-center">
+        <a href="../index.html" class="text-2xl font-bold text-gray-800">U-Rent</a>
+        <nav class="flex items-center space-x-6">
+          <a href="items.html" class="text-gray-600 hover:text-blue-600">
+            <i class="fas fa-box mr-1"></i> Items
+          </a>
+          <a href="bookmarks.html" class="text-gray-600 hover:text-blue-600">
+            <i class="fas fa-bookmark mr-1"></i> Bookmarks
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h1 class="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
+
+      <!-- Loading Spinner -->
+      <div id="loadingSpinner" class="hidden text-center py-8">
+        <i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i>
+      </div>
+
+      <!-- Error Message -->
+      <div id="errorMessage" class="hidden bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
+
+      <!-- Success Message -->
+      <div id="successMessage" class="hidden bg-green-100 text-green-700 p-4 mb-4 rounded"></div>
+
+      <!-- Avatar Section -->
+      <div class="mb-8 text-center">
+        <img 
+          id="avatarPreview" 
+          src="placeholder-avatar.jpg" 
+          alt="Avatar" 
+          class="hidden w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+        >
+        <input
+          type="file"
+          id="avatar"
+          accept="image/*"
+          class="hidden"
+        >
+        <button 
+          onclick="document.getElementById('avatar').click()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Change Avatar
+        </button>
+      </div>
+
+      <!-- Profile Form -->
+      <form id="profileForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input
+            type="text"
+            id="name"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input
+            type="email"
+            id="email"
+            disabled
+            class="w-full px-4 py-2 border rounded-lg bg-gray-100 cursor-not-allowed"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+          <input
+            type="tel"
+            id="phone"
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="+251 900 000 000"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+          <textarea
+            id="bio"
+            rows="3"
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="Tell us about yourself..."
+          ></textarea>
+        </div>
+
+        <div class="pt-4">
+          <button
+            type="submit"
+            class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
+
+      <!-- Trust Score -->
+      <div class="mt-8 text-center">
+        <p class="text-gray-600">Trust Score</p>
+        <p id="trustScore" class="text-4xl font-bold text-blue-600">N/A</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/profile.js"></script>
+</body>
+</html>
+
+<!-- item-details.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Item Details - U-rent</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+      .star-rating {
+        display: inline-flex;
+        gap: 0.25rem;
+      }
+      .star {
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #d1d5db;
+        transition: color 0.2s;
+      }
+      .star.active {
+        color: #fbbf24;
+      }
+      .star:hover {
+        color: #f59e0b;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+          <a href="../index.html" class="flex items-center space-x-2">
+            <i class="fas fa-home text-blue-600"></i>
+            <span class="font-bold text-xl">U-rent</span>
+          </a>
+          <div class="flex space-x-4">
+            <a href="../index.html" class="text-gray-600 hover:text-blue-600">Home</a>
+            <a href="global-chat.html" class="text-gray-600 hover:text-blue-600">Chat</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Left Column: Item Details -->
+        <div class="space-y-6">
+          <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div id="itemImages" class="relative h-96">
+              <!-- Images will be loaded here -->
+            </div>
+            <div class="p-6">
+              <div id="itemDetails">
+                <!-- Item details will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Rating and Comments -->
+        <div class="space-y-6">
+          <!-- Rating Section -->
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Rate this Item</h2>
+            <div id="ratingSection">
+              <!-- Rating UI will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Comments Section -->
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Comments</h2>
+            <div id="commentsSection">
+              <!-- Comments will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add API helper -->
+    <script src="../js/api.js"></script>
+    
+    <script>
+      // Get item ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const itemId = urlParams.get('id');
+      let currentImageIndex = 0;
+
+      // Load item details
+      async function loadItemDetails() {
+        try {
+          const item = await callApi(`/items/${itemId}`);
+          if (!item) {
+            document.getElementById('itemDetails').innerHTML = `
+              <div class="text-center text-gray-500 py-8">Item not found</div>
+            `;
+            return;
+          }
+
+          // Load images
+          document.getElementById('itemImages').innerHTML = `
+            <img src="${getImageUrl(item.photos)}" alt="${item.title}" 
+                 class="w-full h-full object-cover">
+            ${item.photos && item.photos.length > 1 ? `
+              <button onclick="previousImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button onclick="nextImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            ` : ''}
+          `;
+          
+          // Load item details
+          document.getElementById('itemDetails').innerHTML = `
+            <div class="space-y-4">
+              <div class="flex justify-between items-start">
+                <h1 class="text-2xl font-bold text-gray-900">${item.title}</h1>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                  ETB ${item.price}/day
+                </span>
+              </div>
+              
+              <div class="flex items-center space-x-4">
+                <img src="${item.ownerProfilePic || '../assets/default-avatar.jpg'}" 
+                     alt="Owner" class="w-10 h-10 rounded-full">
+                <div>
+                  <p class="font-medium text-gray-900">${item.ownerName || 'Anonymous'}</p>
+                  <p class="text-sm text-gray-500">Owner</p>
+                </div>
+              </div>
+
+              <p class="text-gray-700">${item.description}</p>
+
+              <div class="flex items-center justify-between">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  item.availability === 'AVAILABLE' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }">
+                  ${item.availability === 'AVAILABLE' ? 'Available' : 'Rented Out'}
+                </span>
+                <div class="flex items-center">
+                  <span class="text-yellow-400 mr-1">
+                    <i class="fas fa-star"></i>
+                  </span>
+                  <span class="text-gray-600">${item.averageRating?.toFixed(1) || 'No ratings'}</span>
+                </div>
+              </div>
+
+              ${isLoggedIn() ? `
+                <div class="flex space-x-4 pt-4 border-t">
+                  <button onclick="rentItem('${item.id}')" 
+                          class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Rent Now
+                  </button>
+                  <button onclick="toggleBookmark('${item.id}')"
+                          class="flex items-center justify-center w-12 h-10 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                    <i class="fas fa-bookmark"></i>
+                  </button>
+                </div>
+              ` : `
+                <a href="../login.html" class="block text-center bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200">
+                  Login to Rent
+                </a>
+              `}
+            </div>
+          `;
+
+          // Load rating section
+          document.getElementById('ratingSection').innerHTML = `
+            ${isLoggedIn() ? `
+              <div class="space-y-4">
+                <div class="star-rating" id="starRating">
+                  <span class="star" data-rating="1">★</span>
+                  <span class="star" data-rating="2">★</span>
+                  <span class="star" data-rating="3">★</span>
+                  <span class="star" data-rating="4">★</span>
+                  <span class="star" data-rating="5">★</span>
+                </div>
+                <button onclick="submitRating()" 
+                        class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                  Submit Rating
+                </button>
+              </div>
+            ` : `
+              <p class="text-gray-600">
+                <a href="../login.html" class="text-blue-600 hover:underline">Login</a> to rate this item
+              </p>
+            `}
+          `;
+
+          // Initialize rating functionality
+          if (isLoggedIn()) {
+            initializeRating();
+          }
+
+          // Load comments
+          loadComments();
+        } catch (error) {
+          console.error('Failed to load item details:', error);
+          document.getElementById('itemDetails').innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+              Failed to load item details. Please try again later.
+            </div>
+          `;
+        }
+      }
+
+      // Load comments
+      async function loadComments() {
+        try {
+          const item = await callApi(`/items/${itemId}`);
+          const commentsSection = document.getElementById('commentsSection');
+          
+          if (!item || !item.comments) {
+            commentsSection.innerHTML = `
+              ${isLoggedIn() ? `
+                <form onsubmit="submitComment(event)" class="mb-6">
+                  <textarea id="commentContent" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Write a comment..."
+                          rows="3"
+                          required></textarea>
+                  <button type="submit" 
+                          class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Post Comment
+                  </button>
+                </form>
+              ` : `
+                <p class="text-gray-600 mb-6">
+                  <a href="../login.html" class="text-blue-600 hover:underline">Login</a> to post comments
+                </p>
+              `}
+              <p class="text-gray-500">No comments yet</p>
+            `;
+            return;
+          }
+          
+          commentsSection.innerHTML = `
+            ${isLoggedIn() ? `
+              <form onsubmit="submitComment(event)" class="mb-6">
+                <textarea id="commentContent" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Write a comment..."
+                        rows="3"
+                        required></textarea>
+                <button type="submit" 
+                        class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                  Post Comment
+                </button>
+              </form>
+            ` : `
+              <p class="text-gray-600 mb-6">
+                <a href="../login.html" class="text-blue-600 hover:underline">Login</a> to post comments
+              </p>
+            `}
+            
+            <div class="space-y-4">
+              ${item.comments.length > 0 ? item.comments.map(comment => `
+                <div class="border-b border-gray-200 pb-4">
+                  <div class="flex items-start justify-between mb-2">
+                    <div class="flex items-center space-x-3">
+                      <img src="${comment.userProfilePic || '../assets/default-avatar.jpg'}" 
+                           alt="${comment.userName || 'Anonymous'}" 
+                           class="w-8 h-8 rounded-full">
+                      <div>
+                        <p class="font-medium text-gray-900">${comment.userName || 'Anonymous'}</p>
+                        <p class="text-sm text-gray-500">${new Date(comment.timestamp).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-gray-700">${comment.content}</p>
+                </div>
+              `).join('') : `
+                <p class="text-gray-500">No comments yet</p>
+              `}
+            </div>
+          `;
+        } catch (error) {
+          console.error('Failed to load comments:', error);
+          document.getElementById('commentsSection').innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+              Failed to load comments. Please try again later.
+            </div>
+          `;
+        }
+      }
+
+      // Submit rating
+      async function submitRating() {
+        const stars = document.querySelectorAll('.star.active');
+        const rating = stars.length;
+
+        if (rating === 0) {
+          alert('Please select a rating first');
+          return;
+        }
+
+        try {
+          await callApi(`/ratings/${itemId}`, {
+            method: 'POST',
+            body: JSON.stringify({ rating })
+          });
+          
+          alert('Rating submitted successfully!');
+          // Wait a bit for the backend to process before reloading
+          setTimeout(async () => {
+            await loadItemDetails();
+          }, 500);
+        } catch (error) {
+          console.error('Failed to submit rating:', error);
+          alert(error.message || 'Failed to submit rating. Please try again later.');
+        }
+      }
+
+      // Submit comment
+      async function submitComment(event) {
+        event.preventDefault();
+        const content = document.getElementById('commentContent').value;
+        
+        if (!content.trim()) {
+          alert('Please enter a comment');
+          return;
+        }
+
+        try {
+          await callApi(`/comments/${itemId}`, {
+            method: 'POST',
+            body: JSON.stringify({ content })
+          });
+          
+          document.getElementById('commentContent').value = '';
+          alert('Comment posted successfully!');
+          // Wait a bit for the backend to process before reloading
+          setTimeout(async () => {
+            await loadItemDetails();
+          }, 500);
+        } catch (error) {
+          console.error('Failed to submit comment:', error);
+          alert(error.message || 'Failed to submit comment. Please try again later.');
+        }
+      }
+
+      // Initialize rating functionality
+      function initializeRating() {
+        const stars = document.querySelectorAll('.star');
+        let selectedRating = 0;
+
+        stars.forEach(star => {
+          star.addEventListener('mouseover', function() {
+            const rating = this.getAttribute('data-rating');
+            highlightStars(rating);
+          });
+
+          star.addEventListener('mouseout', function() {
+            highlightStars(selectedRating);
+          });
+
+          star.addEventListener('click', function() {
+            selectedRating = this.getAttribute('data-rating');
+            highlightStars(selectedRating);
+          });
+        });
+      }
+
+      // Highlight stars
+      function highlightStars(rating) {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+          const starRating = star.getAttribute('data-rating');
+          star.classList.toggle('active', starRating <= rating);
+        });
+      }
+
+      // Image navigation
+      function previousImage() {
+        const item = document.querySelector('#itemImages img');
+        if (item && item.photos) {
+          currentImageIndex = (currentImageIndex - 1 + item.photos.length) % item.photos.length;
+          updateImage();
+        }
+      }
+
+      function nextImage() {
+        const item = document.querySelector('#itemImages img');
+        if (item && item.photos) {
+          currentImageIndex = (currentImageIndex + 1) % item.photos.length;
+          updateImage();
+        }
+      }
+
+      function updateImage() {
+        const item = document.querySelector('#itemImages img');
+        if (item && item.photos) {
+          item.src = getImageUrl([item.photos[currentImageIndex]]);
+        }
+      }
+
+      // Rent item
+      async function rentItem(itemId) {
+        try {
+          await callApi(`/items/${itemId}/rent`, { method: 'POST' });
+          alert('Item rented successfully!');
+          loadItemDetails(); // Reload to update availability
+        } catch (error) {
+          console.error('Failed to rent item:', error);
+          alert('Failed to rent item. Please try again later.');
+        }
+      }
+
+      // Toggle bookmark
+      async function toggleBookmark(itemId) {
+        try {
+          await callApi(`/items/${itemId}/bookmark`, { method: 'POST' });
+          alert('Bookmark toggled successfully!');
+        } catch (error) {
+          console.error('Failed to toggle bookmark:', error);
+          alert('Failed to toggle bookmark. Please try again later.');
+        }
+      }
+
+      // Initialize
+      if (!itemId) {
+        document.getElementById('itemDetails').innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            No item ID provided
+          </div>
+        `;
+      } else {
+        loadItemDetails();
+      }
+    </script>
+  </body>
+</html>
+
+
+<!-- bookmarks.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookmarks - U-Rent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a href="../index.html" class="text-2xl font-bold text-blue-600">U-Rent</a>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="../index.html" class="text-gray-600 hover:text-blue-600">Home</a>
+          <a href="./my-items.html" class="text-gray-600 hover:text-blue-600">My Items</a>
+          <a href="bookmarks.html" class="text-blue-600 font-semibold">Bookmarks</a>
+          <button onclick="logout()" class="text-gray-600 hover:text-red-600">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">My Bookmarks</h1>
+      <a href="../index.html" class="text-blue-600 hover:text-blue-700">
+        <i class="fas fa-search mr-2"></i>Browse More Items
+      </a>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="hidden">
+      <div class="flex justify-center items-center py-12">
+        <i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="hidden bg-red-100 text-red-700 p-4 rounded-lg mb-6"></div>
+
+    <!-- No Bookmarks Message -->
+    <div id="noBookmarksMessage" class="hidden">
+      <div class="text-center py-12">
+        <i class="fas fa-bookmark text-5xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No Bookmarks Yet</h3>
+        <p class="text-gray-600 mb-6">Start exploring and save items you're interested in!</p>
+        <a href="../index.html" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <i class="fas fa-search mr-2"></i>Browse Items
+        </a>
+      </div>
+    </div>
+
+    <!-- Bookmarks Grid -->
+    <div id="bookmarksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </div>
+
+  <script>
+    function logout() {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userData");
+      window.location.href = "../login.html";
+    }
+  </script>
+  <script src="../js/bookmarks.js"></script>
+</body>
+</html>
+
+<!-- manage-items.html -->
+
+
+<!-- manage-users.html -->
+
+
+<!-- admin-dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <header class="bg-blue-500 text-white p-4 flex justify-between">
+      <h1 class="text-xl font-bold">U-Rent Admin</h1>
+      <nav class="space-x-4">
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="manage-users.html">Manage Users</a>
+        <a href="manage-items.html">Manage Items</a>
+        <a href="../index.html">Logout</a>
+      </nav>
+    </header>
+    <main class="container mx-auto py-8">
+      <h2 class="text-3xl font-bold mb-4">Dashboard Overview</h2>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="p-4 bg-white rounded shadow">
+          <h3 class="text-xl font-bold">Total Users</h3>
+          <p class="text-2xl">100</p>
+        </div>
+        <div class="p-4 bg-white rounded shadow">
+          <h3 class="text-xl font-bold">Total Items</h3>
+          <p class="text-2xl">200</p>
+        </div>
+        <div class="p-4 bg-white rounded shadow">
+          <h3 class="text-xl font-bold">Active Rentals</h3>
+          <p class="text-2xl">50</p>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
+

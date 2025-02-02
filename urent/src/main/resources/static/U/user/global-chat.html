@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Chat - U-Rent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .messages {
+            scrollbar-width: thin;
+            scrollbar-color: #CBD5E0 #F7FAFC;
+        }
+        .messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        .messages::-webkit-scrollbar-track {
+            background: #F7FAFC;
+        }
+        .messages::-webkit-scrollbar-thumb {
+            background-color: #CBD5E0;
+            border-radius: 4px;
+        }
+        .message-appear {
+            animation: messageAppear 0.3s ease-out;
+        }
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .typing-indicator::after {
+            content: '...';
+            animation: typing 1.5s infinite;
+        }
+        @keyframes typing {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-8">
+                    <a href="../index.html" class="text-2xl font-bold text-blue-600">U-Rent</a>
+                    <nav class="hidden md:flex space-x-6">
+                        <a href="../index.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-home mr-1"></i> Home
+                        </a>
+                        <a href="items.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-box mr-1"></i> Items
+                        </a>
+                        <a href="bookmarks.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-bookmark mr-1"></i> Bookmarks
+                        </a>
+                    </nav>
+                </div>
+                <div id="userSection" class="flex items-center space-x-4">
+                    <!-- User info will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Chat Header -->
+            <div class="bg-blue-600 text-white p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-comments text-2xl"></i>
+                        <div>
+                            <h1 class="text-xl font-bold">Global Chat</h1>
+                            <p class="text-sm text-blue-100" id="onlineUsers">
+                                <i class="fas fa-circle text-green-400 mr-1"></i>
+                                <span>Connecting...</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div id="connectionStatus" class="text-sm">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-500 text-white">
+                            <i class="fas fa-sync fa-spin mr-1"></i>
+                            Connecting...
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="messages h-[500px] overflow-y-auto p-4 bg-gray-50" id="messages">
+                <!-- Messages will be loaded here -->
+                <div class="flex justify-center">
+                    <div class="bg-white rounded-lg shadow px-4 py-2">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        Loading messages...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Input -->
+            <div class="p-4 bg-white border-t">
+                <form id="messageForm" class="flex space-x-4">
+                    <div class="relative flex-1">
+                        <input type="text" 
+                               id="messageInput" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Type your message..."
+                               disabled>
+                        <div id="typingIndicator" class="absolute bottom-full left-0 mb-2 text-sm text-gray-500 hidden">
+                            Someone is typing<span class="typing-indicator"></span>
+                        </div>
+                    </div>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Send
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script>
+        // Constants
+        const BASE_URL = 'http://localhost:8090';
+        const token = localStorage.getItem('authToken');
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+        // Global variables
+        let stompClient = null;
+        let currentUser = null;
+        let typingTimeout = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 5;
+
+        // Check authentication
+        if (!token || !userData) {
+            localStorage.setItem('redirectUrl', window.location.href);
+            window.location.href = '../login.html';
+        }
+
+        // Initialize UI elements
+        const messageInput = document.getElementById('messageInput');
+        const messageForm = document.getElementById('messageForm');
+        const messagesContainer = document.getElementById('messages');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const onlineUsers = document.getElementById('onlineUsers');
+
+        // Update user section
+        document.getElementById('userSection').innerHTML = `
+            <div class="flex items-center space-x-3">
+                <img src="${userData.profilePic || '../assets/default-avatar.jpg'}" 
+                     alt="${userData.name}" 
+                     class="w-8 h-8 rounded-full">
+                <span class="text-gray-700">${userData.name}</span>
+                <button onclick="logout()" class="text-gray-600 hover:text-red-600">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        `;
+
+        // Connect to WebSocket
+        function connect() {
+            updateConnectionStatus('connecting');
+            const socket = new SockJS(`${BASE_URL}/ws-chat`);
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null; // Disable debug logging
+
+            stompClient.connect(
+                { Authorization: `Bearer ${token}` },
+                onConnected,
+                onError
+            );
+        }
+
+        // Handle successful connection
+        function onConnected() {
+            currentUser = userData;
+            updateConnectionStatus('connected');
+            enableChat();
+            subscribeToTopics();
+            joinChat();
+            reconnectAttempts = 0;
+        }
+
+        // Handle connection error
+        function onError(error) {
+            console.error('WebSocket connection error:', error);
+            updateConnectionStatus('error');
+            disableChat();
+
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                setTimeout(connect, 5000 * reconnectAttempts);
+            } else {
+                updateConnectionStatus('failed');
+            }
+        }
+
+        // Subscribe to topics
+        function subscribeToTopics() {
+            // Public messages
+            stompClient.subscribe('/topic/public', onMessageReceived);
+            
+            // User presence
+            stompClient.subscribe('/topic/presence', onPresenceUpdate);
+            
+            // Typing indicators
+            stompClient.subscribe('/topic/typing', onTypingUpdate);
+        }
+
+        // Join chat
+        function joinChat() {
+            if (stompClient && currentUser) {
+                const joinMessage = {
+                    type: 'JOIN',
+                    senderId: currentUser.id,
+                    senderName: currentUser.name,
+                    content: `${currentUser.name} joined the chat`,
+                    timestamp: new Date().toISOString()
+                };
+                stompClient.send("/app/chat.join", {}, JSON.stringify(joinMessage));
+            }
+        }
+
+        // Handle received messages
+        function onMessageReceived(payload) {
+            const message = JSON.parse(payload.body);
+            const messageElement = createMessageElement(message);
+            messagesContainer.appendChild(messageElement);
+            scrollToBottom();
+        }
+
+        // Handle presence updates
+        function onPresenceUpdate(payload) {
+            const presence = JSON.parse(payload.body);
+            onlineUsers.innerHTML = `
+                <i class="fas fa-circle text-green-400 mr-1"></i>
+                ${presence.count} online
+            `;
+        }
+
+        // Handle typing updates
+        function onTypingUpdate(payload) {
+            const typing = JSON.parse(payload.body);
+            if (typing.senderId !== currentUser.id) {
+                typingIndicator.textContent = `${typing.senderName} is typing...`;
+                typingIndicator.classList.remove('hidden');
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    typingIndicator.classList.add('hidden');
+                }, 1000);
+            }
+        }
+
+        // Create message element
+        function createMessageElement(message) {
+            const isOwnMessage = message.senderId === currentUser.id;
+            const div = document.createElement('div');
+            div.className = `message-appear flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`;
+            
+            div.innerHTML = `
+                <div class="max-w-[70%] ${isOwnMessage ? 'bg-blue-500 text-white' : 'bg-white'} rounded-lg shadow px-4 py-2">
+                    ${!isOwnMessage ? `
+                        <div class="text-sm font-medium ${isOwnMessage ? 'text-blue-100' : 'text-gray-900'}">
+                            ${message.senderName}
+                        </div>
+                    ` : ''}
+                    <div class="break-words">
+                        ${message.content}
+                    </div>
+                    <div class="text-xs mt-1 ${isOwnMessage ? 'text-blue-100' : 'text-gray-500'}">
+                        ${new Date(message.timestamp).toLocaleTimeString()}
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Send message
+        function sendMessage(event) {
+            event.preventDefault();
+            const content = messageInput.value.trim();
+            
+            if (content && stompClient && currentUser) {
+                const chatMessage = {
+                    type: 'CHAT',
+                    senderId: currentUser.id,
+                    senderName: currentUser.name,
+                    content: content,
+                    timestamp: new Date().toISOString()
+                };
+                
+                stompClient.send("/app/chat.send", {}, JSON.stringify(chatMessage));
+                messageInput.value = '';
+            }
+        }
+
+        // Send typing indicator
+        function sendTypingIndicator() {
+            if (stompClient && currentUser) {
+                const typingMessage = {
+                    type: 'TYPING',
+                    senderId: currentUser.id,
+                    senderName: currentUser.name
+                };
+                stompClient.send("/app/chat.typing", {}, JSON.stringify(typingMessage));
+            }
+        }
+
+        // Utility functions
+        function updateConnectionStatus(status) {
+            const statusMap = {
+                connecting: {
+                    icon: 'fa-sync fa-spin',
+                    text: 'Connecting...',
+                    bg: 'bg-blue-500'
+                },
+                connected: {
+                    icon: 'fa-check',
+                    text: 'Connected',
+                    bg: 'bg-green-500'
+                },
+                error: {
+                    icon: 'fa-exclamation-triangle',
+                    text: 'Reconnecting...',
+                    bg: 'bg-yellow-500'
+                },
+                failed: {
+                    icon: 'fa-times',
+                    text: 'Connection Failed',
+                    bg: 'bg-red-500'
+                }
+            };
+
+            const statusInfo = statusMap[status];
+            connectionStatus.innerHTML = `
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full ${statusInfo.bg} text-white">
+                    <i class="fas ${statusInfo.icon} mr-1"></i>
+                    ${statusInfo.text}
+                </span>
+            `;
+        }
+
+        function enableChat() {
+            messageInput.disabled = false;
+            messageForm.querySelector('button').disabled = false;
+            messagesContainer.innerHTML = '';
+        }
+
+        function disableChat() {
+            messageInput.disabled = true;
+            messageForm.querySelector('button').disabled = true;
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function logout() {
+            if (stompClient) {
+                const leaveMessage = {
+                    type: 'LEAVE',
+                    senderId: currentUser.id,
+                    senderName: currentUser.name,
+                    content: `${currentUser.name} left the chat`,
+                    timestamp: new Date().toISOString()
+                };
+                stompClient.send("/app/chat.leave", {}, JSON.stringify(leaveMessage));
+                stompClient.disconnect();
+            }
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            window.location.href = '../login.html';
+        }
+
+        // Event listeners
+        messageForm.addEventListener('submit', sendMessage);
+        messageInput.addEventListener('input', sendTypingIndicator);
+
+        // Initialize chat
+        connect();
+    </script>
+</body>
+</html>

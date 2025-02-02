@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Rent - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-hover {
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <a href="index.html" class="text-2xl font-bold text-gray-800">U-Rent</a>
+                <nav class="flex items-center space-x-6">
+                    <!-- Show these links only when logged in -->
+                    <div id="authLinks" style="display: none;" class="flex space-x-6">
+                        <a href="user/post-item.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-plus-circle mr-1"></i> Post Item
+                        </a>
+                        <a href="user/my-items.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-box mr-1"></i> My Items</a>
+                        <a href="user/items.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-box mr-1"></i> Items
+                        </a>
+                        <a href="user/bookmarks.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-bookmark mr-1"></i> Bookmarks
+                        </a>
+                        <a href="user/global-chat.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-comments mr-1"></i> Chat
+                        </a>
+                        <a href="user/profile.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-user mr-1"></i> Profile
+                        </a>
+                        <button onclick="logout()" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        </button>
+                    </div>
+                    <!-- Show these links when not logged in -->
+                    <div id="nonAuthLinks">
+                        <a href="login.html" class="text-gray-600 hover:text-blue-600">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Login
+                        </a>
+                        <a href="user/signup.html" class="text-gray-600 hover:text-blue-600 ml-4">
+                            <i class="fas fa-user-plus mr-1"></i> Sign Up
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-b from-blue-800 to-blue-600 text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl font-bold mb-4">Find the Perfect Rental</h1>
+            <p class="text-xl mb-8">Discover unique items available for rent in your area</p>
+            
+            <!-- Search and Filters -->
+            <div class="max-w-4xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <div class="flex-1">
+                        <input type="text" id="searchInput" placeholder="Search items..." 
+                            class="w-full px-6 py-4 rounded-lg border-2 border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800">
+                    </div>
+                    <select class="px-6 py-4 rounded-lg border-2 border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800">
+                        <option>All Categories</option>
+                        <option>Electronics</option>
+                        <option>Tools</option>
+                        <option>Sports</option>
+                        <option>Furniture</option>
+                        <option>Vehicles</option>
+                    </select>
+                </div>
+                
+                <!-- Post Item CTA -->
+                <div class="flex justify-center">
+                    <a href="user/post-item.html" class="inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg" data-requires-auth>
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Post Your Item for Rent
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12">
+        <h2 class="text-3xl font-bold mb-8 text-gray-800">Featured Items</h2>
+        
+        <!-- Items Grid -->
+        <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <!-- Items will be loaded here -->
+        </div>
+    </main>
+
+    <script src="./js/utils.js"></script>
+    <script src="./js/index.js"></script>
+  </body>
+</html>
