@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Item Details - U-rent</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+      .star-rating {
+        display: inline-flex;
+        gap: 0.25rem;
+      }
+      .star {
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #d1d5db;
+        transition: color 0.2s;
+      }
+      .star.active {
+        color: #fbbf24;
+      }
+      .star:hover {
+        color: #f59e0b;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+          <a href="../index.html" class="flex items-center space-x-2">
+            <i class="fas fa-home text-blue-600"></i>
+            <span class="font-bold text-xl">U-rent</span>
+          </a>
+          <div class="flex space-x-4">
+            <a href="../index.html" class="text-gray-600 hover:text-blue-600">Home</a>
+            <a href="global-chat.html" class="text-gray-600 hover:text-blue-600">Chat</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Left Column: Item Details -->
+        <div class="space-y-6">
+          <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div id="itemImages" class="relative h-96">
+              <!-- Images will be loaded here -->
+            </div>
+            <div class="p-6">
+              <div id="itemDetails">
+                <!-- Item details will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Rating and Comments -->
+        <div class="space-y-6">
+          <!-- Rating Section -->
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Rate this Item</h2>
+            <div id="ratingSection">
+              <!-- Rating UI will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Comments Section -->
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Comments</h2>
+            <div id="commentsSection">
+              <!-- Comments will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add API helper -->
+    <script src="../js/api.js"></script>
+    
+    <script>
+      // Get item ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const itemId = urlParams.get('id');
+      let currentImageIndex = 0;
+
+      // Load item details
+      async function loadItemDetails() {
+        try {
+          const item = await callApi(`/items/${itemId}`);
+          if (!item) {
+            document.getElementById('itemDetails').innerHTML = `
+              <div class="text-center text-gray-500 py-8">Item not found</div>
+            `;
+            return;
+          }
+
+          // Load images
+          document.getElementById('itemImages').innerHTML = `
+            <img src="${getImageUrl(item.photos)}" alt="${item.title}" 
+                 class="w-full h-full object-cover">
+            ${item.photos && item.photos.length > 1 ? `
+              <button onclick="previousImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button onclick="nextImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            ` : ''}
+          `;
+          
+          // Load item details
+          document.getElementById('itemDetails').innerHTML = `
+            <div class="space-y-4">
+              <div class="flex justify-between items-start">
+                <h1 class="text-2xl font-bold text-gray-900">${item.title}</h1>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                  ETB ${item.price}/day
+                </span>
+              </div>
+              
+              <div class="flex items-center space-x-4">
+                <img src="${item.ownerProfilePic || '../assets/default-avatar.jpg'}" 
+                     alt="Owner" class="w-10 h-10 rounded-full">
+                <div>
+                  <p class="font-medium text-gray-900">${item.ownerName || 'Anonymous'}</p>
+                  <p class="text-sm text-gray-500">Owner</p>
+                </div>
+              </div>
+
+              <p class="text-gray-700">${item.description}</p>
+
+              <div class="flex items-center justify-between">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  item.availability === 'AVAILABLE' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }">
+                  ${item.availability === 'AVAILABLE' ? 'Available' : 'Rented Out'}
+                </span>
+                <div class="flex items-center">
+                  <span class="text-yellow-400 mr-1">
+                    <i class="fas fa-star"></i>
+                  </span>
+                  <span class="text-gray-600">${item.averageRating?.toFixed(1) || 'No ratings'}</span>
+                </div>
+              </div>
+
+              ${isLoggedIn() ? `
+                <div class="flex space-x-4 pt-4 border-t">
+                  <button onclick="rentItem('${item.id}')" 
+                          class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Rent Now
+                  </button>
+                  <button onclick="toggleBookmark('${item.id}')"
+                          class="flex items-center justify-center w-12 h-10 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                    <i class="fas fa-bookmark"></i>
+                  </button>
+                </div>
+              ` : `
+                <a href="../login.html" class="block text-center bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200">
+                  Login to Rent
+                </a>
+              `}
+            </div>
+          `;
+
+          // Load rating section
+          document.getElementById('ratingSection').innerHTML = `
+            ${isLoggedIn() ? `
+              <div class="space-y-4">
+                <div class="star-rating" id="starRating">
+                  <span class="star" data-rating="1">★</span>
+                  <span class="star" data-rating="2">★</span>
+                  <span class="star" data-rating="3">★</span>
+                  <span class="star" data-rating="4">★</span>
+                  <span class="star" data-rating="5">★</span>
+                </div>
+                <button onclick="submitRating()" 
+                        class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                  Submit Rating
+                </button>
+              </div>
+            ` : `
+              <p class="text-gray-600">
+                <a href="../login.html" class="text-blue-600 hover:underline">Login</a> to rate this item
+              </p>
+            `}
+          `;
+
+          // Initialize rating functionality
+          if (isLoggedIn()) {
+            initializeRating();
+          }
+
+          // Load comments
+          loadComments();
+        } catch (error) {
+          console.error('Failed to load item details:', error);
+          document.getElementById('itemDetails').innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+              Failed to load item details. Please try again later.
+            </div>
+          `;
+        }
+      }
+
+      // Load comments
+      async function loadComments() {
+        try {
+          const comments = await callApi(`/items/${itemId}`);
+          const commentsSection = document.getElementById('commentsSection');
+          
+          commentsSection.innerHTML = `
+            ${isLoggedIn() ? `
+              <form onsubmit="submitComment(event)" class="mb-6">
+                <textarea id="commentContent" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Write a comment..."
+                        rows="3"
+                        required></textarea>
+                <button type="submit" 
+                        class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                  Post Comment
+                </button>
+              </form>
+            ` : `
+              <p class="text-gray-600 mb-6">
+                <a href="../login.html" class="text-blue-600 hover:underline">Login</a> to post comments
+              </p>
+            `}
+            
+            <div class="space-y-4">
+              ${comments && comments.comments && comments.comments.length > 0 ? comments.comments.map(comment => `
+                <div class="border-b border-gray-200 pb-4">
+                  <div class="flex items-start justify-between mb-2">
+                    <div class="flex items-center space-x-3">
+                      <img src="${comment.userProfilePic || '../assets/default-avatar.jpg'}" 
+                           alt="${comment.userName}" 
+                           class="w-8 h-8 rounded-full">
+                      <div>
+                        <p class="font-medium text-gray-900">${comment.userName || 'Anonymous'}</p>
+                        <p class="text-sm text-gray-500">${new Date(comment.timestamp).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-gray-700">${comment.content}</p>
+                </div>
+              `).join('') : `
+                <p class="text-gray-500">No comments yet</p>
+              `}
+            </div>
+          `;
+        } catch (error) {
+          console.error('Failed to load comments:', error);
+          document.getElementById('commentsSection').innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+              Failed to load comments. Please try again later.
+            </div>
+          `;
+        }
+      }
+
+      // Initialize rating functionality
+      function initializeRating() {
+        const stars = document.querySelectorAll('.star');
+        let selectedRating = 0;
+
+        stars.forEach(star => {
+          star.addEventListener('mouseover', function() {
+            const rating = this.getAttribute('data-rating');
+            highlightStars(rating);
+          });
+
+          star.addEventListener('mouseout', function() {
+            highlightStars(selectedRating);
+          });
+
+          star.addEventListener('click', function() {
+            selectedRating = this.getAttribute('data-rating');
+            highlightStars(selectedRating);
+          });
+        });
+      }
+
+      // Highlight stars
+      function highlightStars(rating) {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+          const starRating = star.getAttribute('data-rating');
+          star.classList.toggle('active', starRating <= rating);
+        });
+      }
+
+      // Submit rating
+      async function submitRating() {
+        const stars = document.querySelectorAll('.star.active');
+        const rating = stars.length;
+
+        if (rating === 0) {
+          alert('Please select a rating first');
+          return;
+        }
+
+        try {
+          await callApi(`/ratings/${itemId}`, {
+            method: 'POST',
+            body: JSON.stringify({ rating })
+          });
+          
+          alert('Rating submitted successfully!');
+          loadItemDetails(); // Reload to update average rating
+        } catch (error) {
+          console.error('Failed to submit rating:', error);
+          alert('Failed to submit rating. Please try again later.');
+        }
+      }
+
+      // Submit comment
+      async function submitComment(event) {
+        event.preventDefault();
+        const content = document.getElementById('commentContent').value;
+        
+        try {
+          await callApi(`/comments/${itemId}`, {
+            method: 'POST',
+            body: JSON.stringify({ content })
+          });
+          
+          document.getElementById('commentContent').value = '';
+          loadComments();
+        } catch (error) {
+          console.error('Failed to submit comment:', error);
+          alert('Failed to submit comment. Please try again later.');
+        }
+      }
+
+      // Image navigation
+      function previousImage() {
+        const item = document.querySelector('#itemImages img');
+        if (item && item.photos) {
+          currentImageIndex = (currentImageIndex - 1 + item.photos.length) % item.photos.length;
+          updateImage();
+        }
+      }
+
+      function nextImage() {
+        const item = document.querySelector('#itemImages img');
+        if (item && item.photos) {
+          currentImageIndex = (currentImageIndex + 1) % item.photos.length;
+          updateImage();
+        }
+      }
+
+      function updateImage() {
+        const item = document.querySelector('#itemImages img');
+        if (item && item.photos) {
+          item.src = getImageUrl([item.photos[currentImageIndex]]);
+        }
+      }
+
+      // Rent item
+      async function rentItem(itemId) {
+        try {
+          await callApi(`/items/${itemId}/rent`, { method: 'POST' });
+          alert('Item rented successfully!');
+          loadItemDetails(); // Reload to update availability
+        } catch (error) {
+          console.error('Failed to rent item:', error);
+          alert('Failed to rent item. Please try again later.');
+        }
+      }
+
+      // Toggle bookmark
+      async function toggleBookmark(itemId) {
+        try {
+          await callApi(`/items/${itemId}/bookmark`, { method: 'POST' });
+          alert('Bookmark toggled successfully!');
+        } catch (error) {
+          console.error('Failed to toggle bookmark:', error);
+          alert('Failed to toggle bookmark. Please try again later.');
+        }
+      }
+
+      // Initialize
+      if (!itemId) {
+        document.getElementById('itemDetails').innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            No item ID provided
+          </div>
+        `;
+      } else {
+        loadItemDetails();
+      }
+    </script>
+  </body>
+</html>

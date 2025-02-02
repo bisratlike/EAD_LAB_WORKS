@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <header class="bg-blue-500 text-white p-4 flex justify-between">
+      <h1 class="text-xl font-bold">U-Rent Admin</h1>
+      <nav class="space-x-4">
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="manage-users.html">Manage Users</a>
+        <a href="manage-items.html">Manage Items</a>
+        <a href="../index.html">Logout</a>
+      </nav>
+    </header>
+    <main class="container mx-auto py-8">
+      <h2 class="text-3xl font-bold mb-4">Dashboard Overview</h2>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="p-4 bg-white rounded shadow">
+          <h3 class="text-xl font-bold">Total Users</h3>
+          <p class="text-2xl">100</p>
+        </div>
+        <div class="p-4 bg-white rounded shadow">
+          <h3 class="text-xl font-bold">Total Items</h3>
+          <p class="text-2xl">200</p>
+        </div>
+        <div class="p-4 bg-white rounded shadow">
+          <h3 class="text-xl font-bold">Active Rentals</h3>
+          <p class="text-2xl">50</p>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
